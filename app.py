@@ -20,7 +20,7 @@ def get_dept_term_principal(academicYear = '2018-19'):
 @app.route('/hod/dept')
 def dep_hod(employeeGivenId = '583'):
     dept_hod = st_17.get_dept_hod(employeeGivenId)
-    return dep_hod
+    return jsonify({"dept_hod":dept_hod})
 
 @app.route('/hod/academicyear')
 def get_academicYear_hod(dept_hod = 'CS' ,employeeGivenId = '583'):
@@ -31,8 +31,6 @@ def get_academicYear_hod(dept_hod = 'CS' ,employeeGivenId = '583'):
 def get_term_hod(academicYear = "2018-19",dept = 'CS'):
     data = st_17.get_terms_hod(academicYear,dept)
     return jsonify( { "hod_terms" : data} )
- 
- @app.route('/faculty/academicyear')
 
 @app.route('/faculty/academicyear')
 def get_academicYear_faculty(facultyGivenId = '492'):
@@ -43,12 +41,6 @@ def get_academicYear_faculty(facultyGivenId = '492'):
 def get_terms_faculty(facultyGivenId = '492',academicYear = '2018-19'):
     faculty_terms_data = st_17.get_terms_faculty(facultyGivenId,academicYear)
     return jsonify({"faculty_terms":faculty_terms_data})
-
-@app.route("/terms")
-def get_terms():
-    terms_data = st_17.get_terms_details()
-    return jsonify({"data":terms_data})
-
 
 @app.route("/courseCodes")
 def get_course_codes():
