@@ -1,6 +1,0 @@
-db.dhi_generic_attainment_configuration.aggregate([
-{$match:{"academicYear":"2018-19","deptId":"CS"}},
-{$unwind:"$courseWiseAttainmentConfiguration"},
-{$match:{"courseWiseAttainmentConfiguration.courseCode":"17CS42"}}
-
-])
