@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from flask_pymongo import PyMongo
+# from flask_pymongo import PyMongo
 
 db = MongoClient(host='localhost', port = 27017)
 mydatabase = db['analytics']

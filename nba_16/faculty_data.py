@@ -105,3 +105,89 @@ def get_cos_of_courses(course_codes):
 
 
     return co_details_of_courses
+
+def get_co_methods():
+    academicYear = "2018-19"
+    facultyGivenId = "67"
+    termNumber = "7"
+    section = "A"
+    courseCode = "15IM71"
+    coNumber = 1
+
+    coDetails = generic_attainment_data.aggregate( [ 
+        { "$unwind" : "$faculties" } ,
+        { "$unwind" : "$courseOutcomeDetailsForAttainment" },
+        { "$match" : {
+            "academicYear" : academicYear,
+            "faculties.facultyGivenId" : facultyGivenId,
+            "termNumber" : termNumber,
+            "section" : section,
+            "courseDetails.courseCode" : courseCode,
+            "courseOutcomeDetailsForAttainment.coNumber" : coNumber
+            } 
+        },
+        { "$project" : {
+            "facultyId" : "$faculties.facultyGivenId",
+            "facultyName" : "$faculties.facultyName",
+            "courseCode" : "$courseDetails.courseCode",
+            "courseName" : "$courseDetails.courseName",
+            "coNumber" : "$courseOutcomeDetailsForAttainment.coNumber",
+            "directMethods" : "$courseOutcomeDetailsForAttainment.directMethods",
+            "indirectMethods" : "$courseOutcomeDetailsForAttainment.indirectMethods",
+            "_id" : 0
+            } 
+        }
+        ] )
+    
+    co_methods = []    
+
+    for field in coDetails:
+        co_methods.append([field])
+      
+    co_methods=co_methods[0]
+
+    get_co_data(co_methods)
+
+    return co_methods
+
+def get_co_data(m):
+    test_co_details = {}
+    directMethods = []
+   
+    directMethods = m[0]['directMethods']
+
+    test_co_details['courseCode'] = m[0]['courseCode']
+    test_co_details['courseName'] = m[0]['courseName']
+    test_co_details['facultyId'] = m[0]['facultyId']
+    test_co_details['facultyName'] = m[0]['facultyName']
+    test_co_details['direct_attainment_details'] = []
+  
+    for method in directMethods:
+        test_co_details['direct_attainment_details'].append({
+            "description" : method['methodName'],
+            "attainment" : method['attainment'],
+            "attainmentPercentage" : method['attainmentPercentage']
+            })
+
+        if method['methodName'] == "IA":
+            test_co_details['direct_attainment_details'].append({
+                "method_details" : method['nextLevelAttainments']
+            })
+        elif method['methodName'] == "Other Assessment":
+            sub = []
+            sub = method['subAssessmentMethods']
+            test_co_details['direct_attainment_details'].append({
+                "method_details" : sub[0]['nextLevelAttainments']
+            })
+        else:
+            sub = []
+            sub.append({
+                "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
+                "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents']
+            })
+            test_co_details['direct_attainment_details'].append({
+                "method_details" : sub
+            })
+   
+    print(test_co_details)
+    
