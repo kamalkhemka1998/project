@@ -146,48 +146,87 @@ def get_co_methods():
       
     co_methods=co_methods[0]
 
-    get_co_data(co_methods)
-
     return co_methods
 
-def get_co_data(m):
+def get_co_data():
+    m = get_co_methods()
     test_co_details = {}
     directMethods = []
    
     directMethods = m[0]['directMethods']
+    indirectMethods = m[0]['indirectMethods']
 
     test_co_details['courseCode'] = m[0]['courseCode']
     test_co_details['courseName'] = m[0]['courseName']
     test_co_details['facultyId'] = m[0]['facultyId']
     test_co_details['facultyName'] = m[0]['facultyName']
     test_co_details['direct_attainment_details'] = []
-  
-    for method in directMethods:
-        test_co_details['direct_attainment_details'].append({
-            "description" : method['methodName'],
-            "attainment" : method['attainment'],
-            "attainmentPercentage" : method['attainmentPercentage']
-            })
+    test_co_details['indirect_attainment_details'] = []
+   
+    w = get_weightage()
+    f = w[0]['firstLevelWeightage']
+    test_co_details['directAttainmentWeightage'] = f['directMethodWeightage']
+    test_co_details['indirectAttainmentWeightage'] = f['indirectMethodWeightage']
 
+    for method in directMethods:
         if method['methodName'] == "IA":
-            test_co_details['direct_attainment_details'].append({
-                "method_details" : method['nextLevelAttainments']
-            })
+            method_details = method['nextLevelAttainments']
+        
         elif method['methodName'] == "Other Assessment":
             sub = []
             sub = method['subAssessmentMethods']
-            test_co_details['direct_attainment_details'].append({
-                "method_details" : sub[0]['nextLevelAttainments']
-            })
+            method_details = sub[0]['nextLevelAttainments']
+      
         else:
             sub = []
             sub.append({
                 "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
                 "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents']
             })
-            test_co_details['direct_attainment_details'].append({
-                "method_details" : sub
+            method_details = sub
+
+        test_co_details['direct_attainment_details'].append({
+            "methodName" : method['methodName'],
+            "description" : method['methodDescription'],
+            "attainment" : method['attainment'],
+            "attainmentPercentage" : method['attainmentPercentage'],
+            "method_details" : method_details
             })
-   
-    print(test_co_details)
+
+    for method in indirectMethods:
+        test_co_details['indirect_attainment_details'].append({
+            "methodName" : method['methodName'],
+            "description" : method['methodDescription'],
+            "attainment" : method['attainment'],
+            "attainmentPercentage" : method['attainmentPercentage']
+            })
     
+    return test_co_details
+    
+def get_weightage():
+    academicYear = "2018-19"
+    deptId = "IS"
+    courseType = "THEORY"
+    weightage = generic_attainment_configuration.aggregate([
+        {"$unwind":"$subGenericAttainmentConfigurationList"},
+        {
+            "$match":{
+                "academicYear":academicYear,
+                "deptId" : deptId,
+                "subGenericAttainmentConfigurationList.courseType":courseType
+            }
+        },
+        {
+            "$project":{
+                "firstLevelWeightage" : "$subGenericAttainmentConfigurationList.firstLevelWeightage",
+                "_id" : 0
+                }
+        }
+            
+    ])
+    
+    weightages = []
+
+    for w in weightage:
+        weightages.append(w)
+    return weightages

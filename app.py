@@ -64,10 +64,10 @@ def get_cos_of_courses_of_a_faculty():
     get_cos_of_courses = faculty.get_cos_of_courses(course_codes)
     return jsonify({'course_outcomes_faculty':get_cos_of_courses})
 
-@app.route('/method')
+@app.route('/assessment')
 def get_info_of_co():
-    methods = faculty.get_co_methods()
-    return jsonify({'methods':methods})
+    test_co_details = faculty.get_co_data()
+    return jsonify({'test_co_details':test_co_details})
 
 if __name__ == "__main__":
     app.run(debug=True) 
