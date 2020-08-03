@@ -4,7 +4,7 @@ from flask_cors import CORS, cross_origin
 import statement17 as st_17
 from nba_16 import faculty_data as faculty
 from nba_16 import hod_data as hod
-from mongoFlask import MongoJSON_Encoder
+#from mongoFlask import MongoJSON_Encoder
 
 app = Flask(__name__)
 #app.json_encoder = MongoJSON_Encoder
