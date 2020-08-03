@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from flask_pymongo import PyMongo
+# from flask_pymongo import PyMongo
 from flask_cors import CORS, cross_origin
 import statement17 as st_17
 from nba_16 import faculty_data as faculty
@@ -7,7 +7,7 @@ from nba_16 import hod_data as hod
 from mongoFlask import MongoJSON_Encoder
 
 app = Flask(__name__)
-app.json_encoder = MongoJSON_Encoder
+#app.json_encoder = MongoJSON_Encoder
 CORS(app)
 
 @app.route('/principal/academicyear')
@@ -74,6 +74,11 @@ def get_cos_of_courses_of_a_faculty(facultyId,academicYear,termNumber):
 def get_cos_of_courses_of_department():
     get_cos_of_courses_of_dept = hod.get_cos_of_all_courses_of_a_dept()
     return jsonify({'cos_of_courses_of_dept':get_cos_of_courses_of_dept})
+
+@app.route('/assessment')
+def get_info_of_co():
+    test_co_details = faculty.get_co_data()
+    return jsonify({'test_co_details':test_co_details})
 
 if __name__ == "__main__":
     app.run(debug=True) 
