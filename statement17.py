@@ -1,8 +1,9 @@
 from pymongo import MongoClient
-from flask_pymongo import PyMongo
+# from flask_pymongo import PyMongo
 
 db = MongoClient(host='localhost', port = 27017)
-mydatabase = db['nba-analytics-backend']
+
+mydatabase = db['dhi-mite']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
 lesson_plan = mydatabase['dhi_lesson_plan']
@@ -51,7 +52,7 @@ def get_terms_hod(academicYear,dept):
 
 def get_academicYear_faculty(facultyGivenId):
     querry = lesson_plan.aggregate([
-    {'$match' : {"faculties.facultyGivenId":'492'}},
+    {'$match' : {"faculties.facultyGivenId":facultyGivenId}},
     {'$group': { '_id' : 'null',
         "all_academic_year" : {'$addToSet' : "$academicYear"}
         }},

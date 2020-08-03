@@ -20,14 +20,9 @@ class User:
 def get_user():
     #Faculty
     user = User("67","2018-19","6")
-
-    '''HOD
-    user = User("583")'''
-
     return user
 
-def get_course_code():
-    user = get_user()
+def get_course_code(facultyId,academicYear,termNumber):
     courses = lesson_plan.aggregate([
         {
             "$unwind":"$faculties"
@@ -36,9 +31,9 @@ def get_course_code():
             "$unwind":"$departments"
         },
         {
-            "$match":{"academicYear":user.academicYear,
-                "faculties.facultyGivenId":user.facultyId,
-                "departments.termNumber":user.termNumber
+            "$match":{"academicYear":academicYear,
+                "faculties.facultyGivenId":facultyId,
+                "departments.termNumber":termNumber
             }
         },
         {
@@ -56,8 +51,7 @@ def get_course_code():
     
     return course_codes
 
-def get_cos_of_courses(course_codes):
-    user = get_user()
+def get_cos_of_courses(course_codes,facultyId,academicYear,termNumber):
     co_details_of_courses = []
     for course_code in course_codes:
         cos = generic_attainment_data.aggregate([
@@ -70,38 +64,194 @@ def get_cos_of_courses(course_codes):
                 {
                     "$match":
                     {
-                        "year":user.academicYear,
-                        "faculties.facultyGivenId":user.facultyId,
-                        "termNumber":user.termNumber,
+                        "year":academicYear,
+                        "faculties.facultyGivenId":facultyId,
+                        "termNumber":termNumber,
                         "courseDetails.courseCode":course_code['courseCode'],
                         "section":course_code['section']
                     }
                 },
                 {
+                    "$group":{
+                        "_id":{
+                            "courseCode":"$courseDetails.courseCode",
+                            "section":"$section",
+                            "courseName":"$courseDetails.courseName",
+                            "courseType":"$courseDetails.courseType",
+                            "deptId":"$deptid"
+                        },
+                        "average_co_attainments":{"$avg":"$courseOutcomeDetailsForAttainment.totalAttainment"},
+                        
+                        "co_details":{ "$push":{ "coNumber":"$courseOutcomeDetailsForAttainment.coNumber",
+                                                 "coTitle":"$courseOutcomeDetailsForAttainment.coTitle",
+                                                 "total_attainment":"$courseOutcomeDetailsForAttainment.totalAttainment",
+                                                 "direct_attainment":"$courseOutcomeDetailsForAttainment.directAttainment",
+                                                 "indirect_attainment":"$courseOutcomeDetailsForAttainment.indirectAttainment"}
+                                             }
+                                             
+                    }
+                },
+                {
                     "$project":
                     {
-                        "coNumber":"$courseOutcomeDetailsForAttainment.coNumber",
-                        "total_attainment":"$courseOutcomeDetailsForAttainment.totalAttainment",
-                        "direct_attainment":"$courseOutcomeDetailsForAttainment.directAttainment",
-                        "indirect_attainment":"$courseOutcomeDetailsForAttainment.indirectAttainment",
-                        "courseCode":"$courseDetails.courseCode",
-                        "courseName":"$courseDetails.courseName",
-                        "courseType":"$courseDetails.courseType",
-                        "deptId":1,
-                        "section":1,
+                        "average_co_attainments":1,
+                        "courseCode":"$_id.courseCode",
+                        "section":"$_id.section",
+                        "courseName":"$_id.courseName",
+                        "courseType":"$_id.courseType",
+                        "deptId":"$_id.deptId",
+                        "co_details":1,
                         "_id":0
                     }
                 }
             ])
-
-        x = []
-        total_attainment = index = avg_attainment = 0
         for co in cos:
-            x.append(co)
-            total_attainment += x[index]['total_attainment']
-            index += 1
-        average_attainment = total_attainment/index
-        co_details_of_courses.append({"average_attainment_cos":average_attainment,"course_outcomes_of_particular_course":x})
-
+            co_details_of_courses.append(co)
 
     return co_details_of_courses
+
+def get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coNumber):
+    coDetails = generic_attainment_data.aggregate( [ 
+        { "$unwind" : "$faculties" } ,
+        { "$unwind" : "$courseOutcomeDetailsForAttainment" },
+        { "$match" : {
+            "academicYear" : academicYear,
+            "faculties.facultyGivenId" : facultyGivenId,
+            "termNumber" : termNumber,
+            "section" : section,
+            "courseDetails.courseCode" : courseCode,
+            "courseOutcomeDetailsForAttainment.coNumber" : coNumber
+            } 
+        },
+        { "$project" : {
+            "facultyId" : "$faculties.facultyGivenId",
+            "facultyName" : "$faculties.facultyName",
+            "courseCode" : "$courseDetails.courseCode",
+            "courseName" : "$courseDetails.courseName",
+            "coNumber" : "$courseOutcomeDetailsForAttainment.coNumber",
+            "directMethods" : "$courseOutcomeDetailsForAttainment.directMethods",
+            "indirectMethods" : "$courseOutcomeDetailsForAttainment.indirectMethods",
+            "_id" : 0
+            } 
+        }
+        ] )
+    
+    co_methods = []    
+
+    for field in coDetails:
+        co_methods.append([field])
+      
+    co_methods=co_methods[0]
+
+    return co_methods
+
+def get_co_data():
+    coMethods = get_co_methods(academicYear="2018-19",facultyGivenId="67",termNumber="7",section="A",courseCode="15IM71",coNumber=1)
+    test_co_details = {}
+    directMethods = []
+   
+    directMethods = coMethods[0]['directMethods']
+    indirectMethods = coMethods[0]['indirectMethods']
+
+    test_co_details['courseCode'] = coMethods[0]['courseCode']
+    test_co_details['courseName'] = coMethods[0]['courseName']
+    test_co_details['facultyId'] = coMethods[0]['facultyId']
+    test_co_details['facultyName'] = coMethods[0]['facultyName']
+    test_co_details['direct_attainment_details'] = []
+    test_co_details['indirect_attainment_details'] = []
+   
+    weightage = get_weightage(academicYear="2018-19",deptId="IS",courseType="THEORY")
+
+    firstLevel = weightage[0]['firstLevelWeightage']
+    test_co_details['directAttainmentWeightage'] = firstLevel['directMethodWeightage']
+    test_co_details['indirectAttainmentWeightage'] = firstLevel['indirectMethodWeightage']
+
+    for method in directMethods:
+        if method['methodName'] == "IA":
+            method_details = method['nextLevelAttainments']
+        
+        elif method['methodName'] == "Other Assessment":
+            sub = []
+            sub = method['subAssessmentMethods']
+            method_details = sub[0]['nextLevelAttainments']
+      
+        else:
+            sub = []
+            sub.append({
+                "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
+                "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents']
+            })
+            method_details = sub
+
+        test_co_details['direct_attainment_details'].append({
+            "methodName" : method['methodName'],
+            "description" : method['methodDescription'],
+            "attainment" : method['attainment'],
+            "attainmentPercentage" : method['attainmentPercentage'],
+            "method_details" : method_details
+            })
+
+    for method in indirectMethods:
+        test_co_details['indirect_attainment_details'].append({
+            "methodName" : method['methodName'],
+            "description" : method['methodDescription'],
+            "attainment" : method['attainment'],
+            "attainmentPercentage" : method['attainmentPercentage']
+            })
+    
+    return test_co_details
+    
+def get_weightage(academicYear,deptId,courseType):
+    weightage = generic_attainment_configuration.aggregate([
+        {"$unwind":"$subGenericAttainmentConfigurationList"},
+        {
+            "$match":{
+                "academicYear":academicYear,
+                "deptId" : deptId,
+                "subGenericAttainmentConfigurationList.courseType":courseType
+            }
+        },
+        {
+            "$project":{
+                "firstLevelWeightage" : "$subGenericAttainmentConfigurationList.firstLevelWeightage",
+                "_id" : 0
+            }
+        }
+            
+    ])
+    
+    weightages = []
+
+    for w in weightage:
+        weightages.append(w)
+    return weightages
+
+def get_rubrics_details(academicYear,deptId,courseType):
+    rubrics = generic_attainment_configuration.aggregate([
+        {
+            "$unwind":"$subGenericAttainmentConfigurationList"
+        },
+        {
+            "$match":{
+                "academicYear":academicYear,
+                "subGenericAttainmentConfigurationList.courseType":courseType,
+                "deptId":deptId
+            }
+        },
+        {
+            "$project":{
+                "subGenericAttainmentConfigurationList.directMethods.rubricDetail":1,
+                "subGenericAttainmentConfigurationList.directMethods.methodName":1,
+                "subGenericAttainmentConfigurationList.directMethods.methodName":1,
+                "subGenericAttainmentConfigurationList.indirectMethods.rubricDetail":1,
+                "_id":0
+            }
+        }
+
+        ])
+
+    rubric_details = []
+    for rubric in rubrics:
+        rubric_details.append(rubric)
+
+    return rubric_details

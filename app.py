@@ -1,14 +1,16 @@
 from flask import Flask, jsonify, request
-from flask_pymongo import PyMongo
+# from flask_pymongo import PyMongo
 from flask_cors import CORS, cross_origin
 import statement17 as st_17
 from nba_16 import faculty_data as faculty
-from mongoFlask import MongoJSON_Encoder
+from nba_16 import hod_data as hod
+#from mongoFlask import MongoJSON_Encoder
 
 CORS(app)
 
 app = Flask(__name__)
-app.json_encoder = MongoJSON_Encoder
+#app.json_encoder = MongoJSON_Encoder
+CORS(app)
 
 @app.route('/principal/academicyear')
 def get_academicYear_principal():
@@ -35,13 +37,15 @@ def get_term_hod(academicYear = "2018-19",dept = 'CS'):
     data = st_17.get_terms_hod(academicYear,dept)
     return jsonify( { "hod_terms" : data} )
 
-@app.route('/faculty/academicyear')
-def get_academicYear_faculty(facultyGivenId = '492'):
+@app.route('/faculty/academicyear/<facultyGivenId>')
+#facultyGivenId = '492'
+def get_academicYear_faculty(facultyGivenId):
     faculty_academicYear = st_17.get_academicYear_faculty(facultyGivenId)
     return jsonify({"faculty_academicYear":faculty_academicYear})
 
-@app.route("/faculty/terms")
-def get_terms_faculty(facultyGivenId = '492',academicYear = '2018-19'):
+@app.route("/faculty/terms/<facultyGivenId>/<academicYear>")
+#facultyGivenId = '492',academicYear = '2018-19'
+def get_terms_faculty(facultyGivenId,academicYear):
     faculty_terms_data = st_17.get_terms_faculty(facultyGivenId,academicYear)
     return jsonify({"faculty_terms":faculty_terms_data})
 
@@ -60,11 +64,23 @@ def get_course_attainment_configuration():
     course_attainment_configuration = st_17.get_course_attainment_configuration()
     return jsonify({"res":course_attainment_configuration})
 
-@app.route('/co_details_of_courses')
-def get_cos_of_courses_of_a_faculty():
-    course_codes = faculty.get_course_code()
-    get_cos_of_courses = faculty.get_cos_of_courses(course_codes)
+@app.route('/faculty/co_details/<facultyId>/<academicYear>/<termNumber>')
+def get_cos_of_courses_of_a_faculty(facultyId,academicYear,termNumber):
+    #termNumber = list(termNumber.split(','))
+    print(termNumber)
+    course_codes = faculty.get_course_code(facultyId,academicYear,termNumber)
+    get_cos_of_courses = faculty.get_cos_of_courses(course_codes,facultyId,academicYear,termNumber)
     return jsonify({'course_outcomes_faculty':get_cos_of_courses})
+    
+@app.route('/co_details_of_dept_course')
+def get_cos_of_courses_of_department():
+    get_cos_of_courses_of_dept = hod.get_cos_of_all_courses_of_a_dept()
+    return jsonify({'cos_of_courses_of_dept':get_cos_of_courses_of_dept})
+
+@app.route('/assessment')
+def get_info_of_co():
+    test_co_details = faculty.get_co_data()
+    return jsonify({'test_co_details':test_co_details})
 
 @app.route('/getBlooms')
 def get_bloomsLevel_of_cos():
