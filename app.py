@@ -64,7 +64,7 @@ def get_course_attainment_configuration():
 
 @app.route('/faculty/co_details/<facultyId>/<academicYear>/<termNumber>')
 def get_cos_of_courses_of_a_faculty(facultyId,academicYear,termNumber):
-    termNumber = list(termNumber.split(','))
+    #termNumber = list(termNumber.split(','))
     print(termNumber)
     course_codes = faculty.get_course_code(facultyId,academicYear,termNumber)
     get_cos_of_courses = faculty.get_cos_of_courses(course_codes,facultyId,academicYear,termNumber)
