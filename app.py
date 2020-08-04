@@ -64,10 +64,8 @@ def get_course_attainment_configuration():
 
 @app.route('/faculty/co_details/<facultyId>/<academicYear>/<termNumber>')
 def get_cos_of_courses_of_a_faculty(facultyId,academicYear,termNumber):
-    #termNumber = list(termNumber.split(','))
-    print(termNumber)
-    course_codes = faculty.get_course_code(facultyId,academicYear,termNumber)
-    get_cos_of_courses = faculty.get_cos_of_courses(course_codes,facultyId,academicYear,termNumber)
+    termNumber = list(termNumber.split(','))
+    get_cos_of_courses = faculty.get_cos_of_courses(facultyId,academicYear,termNumber)
     return jsonify({'course_outcomes_faculty':get_cos_of_courses})
     
 @app.route('/co_details_of_dept_course')

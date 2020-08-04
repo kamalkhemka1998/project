@@ -33,12 +33,13 @@ def get_course_code(facultyId,academicYear,termNumber):
         {
             "$match":{"academicYear":academicYear,
                 "faculties.facultyGivenId":facultyId,
-                "departments.termNumber":termNumber
+                "departments.termNumber":{"$in":termNumber}
             }
         },
         {
             "$project":{"courseCode":1,
                 "section":"$departments.section",
+                "termNumber":"$departments.termNumber",
                 "_id":0
             }
         }
@@ -51,8 +52,10 @@ def get_course_code(facultyId,academicYear,termNumber):
     
     return course_codes
 
-def get_cos_of_courses(course_codes,facultyId,academicYear,termNumber):
+def get_cos_of_courses(facultyId,academicYear,termNumber):
     co_details_of_courses = []
+    course_codes = get_course_code(facultyId,academicYear,termNumber)
+
     for course_code in course_codes:
         cos = generic_attainment_data.aggregate([
                 {
@@ -66,10 +69,13 @@ def get_cos_of_courses(course_codes,facultyId,academicYear,termNumber):
                     {
                         "year":academicYear,
                         "faculties.facultyGivenId":facultyId,
-                        "termNumber":termNumber,
+                        "termNumber":course_code['termNumber'],
                         "courseDetails.courseCode":course_code['courseCode'],
                         "section":course_code['section']
                     }
+                },
+                {
+                    "$limit":5
                 },
                 {
                     "$group":{
@@ -78,7 +84,8 @@ def get_cos_of_courses(course_codes,facultyId,academicYear,termNumber):
                             "section":"$section",
                             "courseName":"$courseDetails.courseName",
                             "courseType":"$courseDetails.courseType",
-                            "deptId":"$deptid"
+                            "deptId":"$deptid",
+                            "termNumber":"$termNumber"
                         },
                         "average_co_attainments":{"$avg":"$courseOutcomeDetailsForAttainment.totalAttainment"},
                         
@@ -86,7 +93,7 @@ def get_cos_of_courses(course_codes,facultyId,academicYear,termNumber):
                                                  "coTitle":"$courseOutcomeDetailsForAttainment.coTitle",
                                                  "total_attainment":"$courseOutcomeDetailsForAttainment.totalAttainment",
                                                  "direct_attainment":"$courseOutcomeDetailsForAttainment.directAttainment",
-                                                 "indirect_attainment":"$courseOutcomeDetailsForAttainment.indirectAttainment"}
+                                                 "indirect_attainment":"$courseOutcomeDetailsForAttainment.indirectAttainment"},
                                              }
                                              
                     }
@@ -100,6 +107,7 @@ def get_cos_of_courses(course_codes,facultyId,academicYear,termNumber):
                         "courseName":"$_id.courseName",
                         "courseType":"$_id.courseType",
                         "deptId":"$_id.deptId",
+                        "termNumber":"$_id.termNumber",
                         "co_details":1,
                         "_id":0
                     }
