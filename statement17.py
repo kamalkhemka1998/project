@@ -48,7 +48,7 @@ def get_terms_hod(academicYear,dept):
         {'$group' : {'_id' : 'null', "hod_terms":{'$addToSet' : "$departments.termNumber"}}},
         {'$project' : {'_id': 0}}
         ])
-    return [q for q in querry]
+    return [q for q in querry] 
 
 def get_facultyId(academicYear,dept,terms):
     query = lesson_plan.aggregate([

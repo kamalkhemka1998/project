@@ -39,7 +39,7 @@ def get_term_hod(academicYear = "2018-19",dept = 'CS'):
 # lists all the facultyId in hod's dept, invokes the method... works for principal too, only that we needn't find dept it'll be choosen
 def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3','5']):
     data = st_17.get_facultyId(academicYear,dept,terms)
-    faculty_ids = data[0]['faculty_id']
+    faculty_ids = data[0]['faculty_id'] 
     hod_data = []
     for fid in faculty_ids:
         course_details = st_17.get_course_of_faculty(fid,academicYear,terms)
