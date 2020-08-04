@@ -6,8 +6,6 @@ from nba_16 import faculty_data as faculty
 from nba_16 import hod_data as hod
 #from mongoFlask import MongoJSON_Encoder
 
-CORS(app)
-
 app = Flask(__name__)
 #app.json_encoder = MongoJSON_Encoder
 CORS(app)
@@ -82,9 +80,9 @@ def get_info_of_co():
     test_co_details = faculty.get_co_data()
     return jsonify({'test_co_details':test_co_details})
 
-@app.route('/getBlooms')
-def get_bloomsLevel_of_cos():
-    blooms = st_17.get_bloomsLevel_Of_Cos()
+@app.route('/getBlooms/<facultyId>/<academicYear>/<deptNumber>/<courseCode>')
+def get_bloomsLevel_of_cos(facultyId,academicYear,deptNumber,courseCode):
+    blooms = st_17.get_bloomsLevel_Of_Cos(facultyId,academicYear,deptNumber,courseCode)
     return jsonify({"res":blooms})
 
 if __name__ == "__main__":
