@@ -52,10 +52,10 @@ def get_course_code(facultyId,academicYear,termNumber):
     
     return course_codes
 
-def get_cos_of_courses(facultyId,academicYear):
+def get_cos_of_courses(facultyId,academicYear,termNumber):
     co_details_of_courses = []
-    course_codes = get_course_code()
-    
+    course_codes = get_course_code(facultyId,academicYear,termNumber)
+
     for course_code in course_codes:
         cos = generic_attainment_data.aggregate([
                 {

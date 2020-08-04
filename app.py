@@ -6,8 +6,6 @@ from nba_16 import faculty_data as faculty
 from nba_16 import hod_data as hod
 #from mongoFlask import MongoJSON_Encoder
 
-CORS(app)
-
 app = Flask(__name__)
 #app.json_encoder = MongoJSON_Encoder
 CORS(app)
@@ -67,7 +65,7 @@ def get_course_attainment_configuration():
 @app.route('/faculty/co_details/<facultyId>/<academicYear>/<termNumber>')
 def get_cos_of_courses_of_a_faculty(facultyId,academicYear,termNumber):
     termNumber = list(termNumber.split(','))
-    get_cos_of_courses = faculty.get_cos_of_courses(facultyId,academicYear)
+    get_cos_of_courses = faculty.get_cos_of_courses(facultyId,academicYear,termNumber)
     return jsonify({'course_outcomes_faculty':get_cos_of_courses})
     
 @app.route('/co_details_of_dept_course')
