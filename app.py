@@ -7,10 +7,6 @@ from nba_16 import hod_data as hod
 import json
 #from mongoFlask import MongoJSON_Encoder
 
-<<<<<<< HEAD
-=======
-# CORS(app)
->>>>>>> Integration of hod, principal- statement 17
 app = Flask(__name__)
 #app.json_encoder = MongoJSON_Encoder
 cors = CORS(app)
