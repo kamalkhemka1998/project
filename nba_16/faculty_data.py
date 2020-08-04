@@ -118,14 +118,7 @@ def get_cos_of_courses(facultyId,academicYear):
 
     return co_details_of_courses
 
-def get_co_methods():
-    academicYear = "2018-19"
-    facultyGivenId = "67"
-    termNumber = "7"
-    section = "A"
-    courseCode = "15IM71"
-    coNumber = 1
-
+def get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coNumber):
     coDetails = generic_attainment_data.aggregate( [ 
         { "$unwind" : "$faculties" } ,
         { "$unwind" : "$courseOutcomeDetailsForAttainment" },
@@ -161,24 +154,25 @@ def get_co_methods():
     return co_methods
 
 def get_co_data():
-    m = get_co_methods()
+    coMethods = get_co_methods(academicYear="2018-19",facultyGivenId="67",termNumber="7",section="A",courseCode="15IM71",coNumber=1)
     test_co_details = {}
     directMethods = []
    
-    directMethods = m[0]['directMethods']
-    indirectMethods = m[0]['indirectMethods']
+    directMethods = coMethods[0]['directMethods']
+    indirectMethods = coMethods[0]['indirectMethods']
 
-    test_co_details['courseCode'] = m[0]['courseCode']
-    test_co_details['courseName'] = m[0]['courseName']
-    test_co_details['facultyId'] = m[0]['facultyId']
-    test_co_details['facultyName'] = m[0]['facultyName']
+    test_co_details['courseCode'] = coMethods[0]['courseCode']
+    test_co_details['courseName'] = coMethods[0]['courseName']
+    test_co_details['facultyId'] = coMethods[0]['facultyId']
+    test_co_details['facultyName'] = coMethods[0]['facultyName']
     test_co_details['direct_attainment_details'] = []
     test_co_details['indirect_attainment_details'] = []
    
-    w = get_weightage()
-    f = w[0]['firstLevelWeightage']
-    test_co_details['directAttainmentWeightage'] = f['directMethodWeightage']
-    test_co_details['indirectAttainmentWeightage'] = f['indirectMethodWeightage']
+    weightage = get_weightage(academicYear="2018-19",deptId="IS",courseType="THEORY")
+
+    firstLevel = weightage[0]['firstLevelWeightage']
+    test_co_details['directAttainmentWeightage'] = firstLevel['directMethodWeightage']
+    test_co_details['indirectAttainmentWeightage'] = firstLevel['indirectMethodWeightage']
 
     for method in directMethods:
         if method['methodName'] == "IA":
@@ -215,10 +209,7 @@ def get_co_data():
     
     return test_co_details
     
-def get_weightage():
-    academicYear = "2018-19"
-    deptId = "IS"
-    courseType = "THEORY"
+def get_weightage(academicYear,deptId,courseType):
     weightage = generic_attainment_configuration.aggregate([
         {"$unwind":"$subGenericAttainmentConfigurationList"},
         {
@@ -232,7 +223,7 @@ def get_weightage():
             "$project":{
                 "firstLevelWeightage" : "$subGenericAttainmentConfigurationList.firstLevelWeightage",
                 "_id" : 0
-                }
+            }
         }
             
     ])

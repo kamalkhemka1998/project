@@ -4,7 +4,9 @@ from flask_cors import CORS, cross_origin
 import statement17 as st_17
 from nba_16 import faculty_data as faculty
 from nba_16 import hod_data as hod
-from mongoFlask import MongoJSON_Encoder
+#from mongoFlask import MongoJSON_Encoder
+
+CORS(app)
 
 app = Flask(__name__)
 #app.json_encoder = MongoJSON_Encoder
@@ -77,6 +79,11 @@ def get_cos_of_courses_of_department():
 def get_info_of_co():
     test_co_details = faculty.get_co_data()
     return jsonify({'test_co_details':test_co_details})
+
+@app.route('/getBlooms')
+def get_bloomsLevel_of_cos():
+    blooms = st_17.get_bloomsLevel_Of_Cos()
+    return jsonify({"res":blooms})
 
 if __name__ == "__main__":
     app.run(debug=True) 

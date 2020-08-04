@@ -2,6 +2,7 @@ from pymongo import MongoClient
 # from flask_pymongo import PyMongo
 
 db = MongoClient(host='localhost', port = 27017)
+
 mydatabase = db['dhi-mite']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
@@ -75,8 +76,8 @@ def get_course_of_faculty():
     courses = lesson_plan.aggregate([
             {"$unwind":"$faculties"},
             {"$unwind":"$departments"},
-            {"$match":{"academicYear":"2018-19","faculties.facultyGivenId":"583","departments.termNumber":"4"}},
-            {"$project":{"courseCode":1,"courseName":1,"_id":0}}
+            {"$match":{"academicYear":"2018-19","faculties.facultyGivenId":"583","departments.termNumber":"5"}},
+            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"_id":0}}
         ])
     codes = []
     for course in courses:
@@ -98,12 +99,172 @@ def get_course_attainment_configuration():
 
 def get_course_attainment_information():
     attainment_data = generic_attainment_data.aggregate([
-            {"$match":{"year":"2018-19","courseDetails.courseCode":"17CS42","termNumber":"4","section":"A","deptId":"CS"}},
             {"$unwind":"$courseOutcomeDetailsForAttainment"},
-            {"$project":{"courseOutcomeDetailsForAttainment.coNumber":1,"courseOutcomeDetailsForAttainment.totalAttainment":1,"courseOutcomeDetailsForAttainment.directAttainment":1,"courseOutcomeDetailsForAttainment.indirectAttainment":1,"_id":0}}
+            {"$unwind":"$faculties"},
+            {"$match":{"year":"2018-19","termNumber":"4","courseDetails.courseCode":"17CS42","section":"A","faculties.facultyGivenId":"583"}},
+            {"$group": {"_id": "null", "uniqueValues": {"$addToSet": "$courseOutcomeDetailsForAttainment"}}},
+            {"$project":{"_id":0,"uniqueValues.coNumber":1,"uniqueValues.totalAttainment":1,"uniqueValues.directAttainment":1,"uniqueValues.indirectAttainment":1,"uniqueValues.coTitle":1,}},
         ])
     course_attainment_data = []
     for attainment in attainment_data:
         course_attainment_data.append(attainment)
     return course_attainment_data
 
+def get_bloomsLevel_Of_Cos():
+    blooms = lesson_plan.aggregate([
+            {"$unwind":"$faculties"},
+            {"$unwind":"$departments"},
+            {"$unwind":"$execution"},
+            {"$unwind":"$execution.couseOutcomes"},
+            {"$match":{"faculties.facultyGivenId":"583","academicYear":"2018-19","departments.termNumber":"4","courseCode":"17CS42"}},
+            {"$group":{"_id":{"CO":"$execution.couseOutcomes","Module":"$execution.moduleNumber","Lesson":"$execution.lessonNumber"},"blooms":{"$addToSet":"$execution.bloomsLevel"}}}
+        ])
+    blooms_level = []
+    for bloom in blooms:
+        blooms_level.append(bloom)
+    CO1 = {}
+    CO2 = {}
+    CO3 = {}
+    CO4 = {}
+    CO5 = {}
+    CO6 = {}
+    for i in blooms_level:
+        x = i['_id']
+        if(x["CO"] == 1):
+            CO1["CO"] = 1
+            for x in i['blooms']:
+                if(x in CO1):
+                    CO1[x] += 1
+                else:
+                    CO1[x] = 1
+        elif(x["CO"] == 2):
+            CO2["CO"] = 2
+            for x in i['blooms']:
+                if(x in CO2):
+                    CO2[x] += 1
+                else:
+                    CO2[x] = 1
+        elif(x["CO"] == 3):
+            CO3["CO"] = 3
+            for x in i['blooms']:
+                if(x in CO3):
+                    CO3[x] += 1
+                else:
+                    CO3[x] = 1
+        elif(x["CO"] == 4):
+            CO4["CO"] = 4
+            for x in i['blooms']:
+                if(x in CO4):
+                    CO4[x] += 1
+                else:
+                    CO4[x] = 1
+        elif(x["CO"] == 5):
+            CO5["CO"] = 5
+            for x in i['blooms']:
+                if(x in CO5):
+                    CO5[x] += 1
+                else:
+                    CO5[x] = 1
+        elif(x["CO"] == 6):
+            CO6["CO"] = 6
+            for x in i['blooms']:
+                if(x in CO6):
+                    CO6[x] += 1
+                else:
+                    CO6[x] = 1
+    m = difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6)
+    return m
+
+def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
+    count = 0
+    diff1 = 0
+    diff2 = 0
+    diff3 = 0
+    diff4 = 0
+    diff5 = 0
+    diff6 = 0
+    for i in CO1:
+        if(i == "REMEMBER"):
+            diff1 += CO1[i]*1
+        elif(i == "UNDERSTAND"):
+            diff1 += CO1[i]*2
+        elif(i == "APPLY"):
+            diff1 += CO1[i]*3
+        elif(i == "ANALYZE"):
+            diff1 += CO1[i]*4
+        elif(i == "EVALUATE"):
+            diff1 += CO1[i]*5
+        elif(i == "CREATE"):
+            diff1 += CO1[i]*6
+    for i in CO2:
+        if(i == "REMEMBER"):
+            diff2 += CO2[i]*1
+        elif(i == "UNDERSTAND"):
+            diff2 += CO2[i]*2
+        elif(i == "APPLY"):
+            diff2 += CO2[i]*3
+        elif(i == "ANALYZE"):
+            diff2 += CO2[i]*4
+        elif(i == "EVALUATE"):
+            diff2 += CO2[i]*5
+        elif(i == "CREATE"):
+            diff2 += CO2[i]*6
+    for i in CO3:
+        if(i == "REMEMBER"):
+            diff3 += CO3[i]*1
+        elif(i == "UNDERSTAND"):
+            diff3 += CO3[i]*2
+        elif(i == "APPLY"):
+            diff3 += CO3[i]*3
+        elif(i == "ANALYZE"):
+            diff3 += CO3[i]*4
+        elif(i == "EVALUATE"):
+            diff3 += CO3[i]*5
+        elif(i == "CREATE"):
+            diff3 += CO3[i]*6
+    for i in CO4:
+        if(i == "REMEMBER"):
+            diff4 += CO4[i]*1
+        elif(i == "UNDERSTAND"):
+            diff4 += CO4[i]*2
+        elif(i == "APPLY"):
+            diff4 += CO4[i]*3
+        elif(i == "ANALYZE"):
+            diff4 += CO4[i]*4
+        elif(i == "EVALUATE"):
+            diff4 += CO4[i]*5
+        elif(i == "CREATE"):
+            diff4 += CO4[i]*6
+    for i in CO5:
+        if(i == "REMEMBER"):
+            diff5 += CO5[i]*1
+        elif(i == "UNDERSTAND"):
+            diff5 += CO5[i]*2
+        elif(i == "APPLY"):
+            diff5 += CO5[i]*3
+        elif(i == "ANALYZE"):
+            diff5 += CO5[i]*4
+        elif(i == "EVALUATE"):
+            diff5 += CO5[i]*5
+        elif(i == "CREATE"):
+            diff5 += CO5[i]*6
+    for i in CO6:
+        if(i == "REMEMBER"):
+            diff6 += CO6[i]*1
+        elif(i == "UNDERSTAND"):
+            diff6 += CO6[i]*2
+        elif(i == "APPLY"):
+            diff6 += CO6[i]*3
+        elif(i == "ANALYZE"):
+            diff6 += CO6[i]*4
+        elif(i == "EVALUATE"):
+            diff6 += CO6[i]*5
+        elif(i == "CREATE"):
+            diff6 += CO6[i]*6
+    CO1["Difficulty"] = diff1
+    CO2["Difficulty"] = diff2
+    CO3["Difficulty"] = diff3
+    CO4["Difficulty"] = diff4
+    CO5["Difficulty"] = diff5
+    CO6["Difficulty"] = diff6
+    return CO1,CO2,CO3,CO4,CO5,CO6
