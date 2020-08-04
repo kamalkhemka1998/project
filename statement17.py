@@ -84,9 +84,8 @@ def get_course_of_faculty():
     for course in courses:
         code = course["courseCode"]
         bloom = get_bloomsLevel_Of_Cos("583","2018-19","4",code)
-        codes.append(course)
-        codes.append(bloom)
-        codes_info.append(codes)
+        codes_info.append(course)
+        codes_info.append({"Co_Details":bloom})
     return codes_info
 
 def get_course_attainment_configuration():
@@ -181,7 +180,8 @@ def get_bloomsLevel_Of_Cos(facultyId,academicYear,deptNumber,courseCode):
     return m
 
 def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
-    count = 0
+    count = 1
+    sum = 0
     diff1 = 0
     diff2 = 0
     diff3 = 0
@@ -272,6 +272,25 @@ def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
     CO4["Difficulty"] = diff4
     CO5["Difficulty"] = diff5
     CO6["Difficulty"] = diff6
-    return CO1,CO2,CO3,CO4,CO5,CO6
+    if(diff1 > 0):
+        count +=1
+        sum +=diff1
+    if(diff2 > 0):
+        count +=1
+        sum +=diff2
+    if(diff3 > 0):
+        count +=1
+        sum +=diff3
+    if(diff4 > 0):
+        count +=1
+        sum +=diff4
+    if(diff5 > 0):
+        count +=1
+        sum +=diff5
+    if(diff6 > 0):
+        count +=1
+        sum +=diff6
 
-get_course_of_faculty()
+    Total = sum/(count-1)
+    return CO1,CO2,CO3,CO4,CO5,CO6,{"Total":Total}
+
