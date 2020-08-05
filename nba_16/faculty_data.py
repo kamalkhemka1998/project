@@ -141,16 +141,16 @@ def get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coN
             "indirectMethods" : "$courseOutcomeDetailsForAttainment.indirectMethods",
             "_id" : 0
             } 
+        },
+        {
+            "$limit":1
         }
         ] )
     
     co_methods = []    
 
     for field in coDetails:
-        co_methods.append([field])
-    
-    if(len(co_methods) > 0):
-        co_methods=co_methods[0]
+        co_methods.append(field)
 
     return co_methods
 

@@ -64,6 +64,7 @@ def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3','5']):
 #facultyGivenId = '492'
 def get_academicYear_faculty(facultyGivenId):
     faculty_academicYear = st_17.get_academicYear_faculty(facultyGivenId)
+    print(faculty_academicYear)
     return jsonify({"faculty_academicYear":faculty_academicYear})
 
 @app.route("/faculty/terms/<facultyGivenId>/<academicYear>")
@@ -99,7 +100,7 @@ def get_cos_of_courses_of_department():
     get_cos_of_courses_of_dept = hod.get_cos_of_all_courses_of_a_dept()
     return jsonify({'cos_of_courses_of_dept':get_cos_of_courses_of_dept})
 
-@app.route('/faculty/data_table/<academicYear>/<facultyId>/<termNumber>/<section>/<courseCode>/<coNumber>/<deptId>/<courseType>')
+@app.route('/faculty/data_table/<academicYear>/<facultyId>/<termNumber>/<section>/<courseCode>/<int:coNumber>/<deptId>/<courseType>')
 def get_info_of_co(academicYear,facultyId,termNumber,section,courseCode,coNumber,deptId,courseType):
     test_co_details = faculty.get_co_data(academicYear,facultyId,termNumber,section,courseCode,coNumber,deptId,courseType)
     return jsonify({'test_co_details':test_co_details})
