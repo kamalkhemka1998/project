@@ -75,7 +75,7 @@ def get_terms_faculty(facultyGivenId,academicYear):
 
 @app.route("/courseCodes/<facultyGivenId>/<year>/<term>")
 def get_course_codes(facultyGivenId = '464',year = '2018-19',term = ['3'] ):
-    course_codes = st_17.get_course_of_faculty(facultyGivenId,year,term)
+    course_codes = st_17.get_course_of_faculty(facultyGivenId,year,term) 
     print(course_codes)
     return jsonify({"res":course_codes})
 
