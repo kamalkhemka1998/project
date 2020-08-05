@@ -73,9 +73,9 @@ def get_cos_of_courses_of_department():
     get_cos_of_courses_of_dept = hod.get_cos_of_all_courses_of_a_dept()
     return jsonify({'cos_of_courses_of_dept':get_cos_of_courses_of_dept})
 
-@app.route('/assessment')
-def get_info_of_co():
-    test_co_details = faculty.get_co_data()
+@app.route('/faculty/data_table/<academicYear>/<facultyId>/<termNumber>/<section>/<courseCode>/<coNumber>/<deptId>/<courseType>')
+def get_info_of_co(academicYear,facultyId,termNumber,section,courseCode,coNumber,deptId,courseType):
+    test_co_details = faculty.get_co_data(academicYear,facultyId,termNumber,section,courseCode,coNumber,deptId,courseType)
     return jsonify({'test_co_details':test_co_details})
 
 @app.route('/getBlooms')
