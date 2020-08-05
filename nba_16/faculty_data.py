@@ -144,14 +144,13 @@ def get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coN
         }
         ] )
     
-    co_methods = []    
-
+    co_methods = []     
     for field in coDetails:
-        co_methods.append([field])
-    
+        co_methods.append([field])   
+
     if(len(co_methods) > 0):
         co_methods=co_methods[0]
-
+        
     return co_methods
 
 def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumber,deptId,courseType):
