@@ -100,7 +100,7 @@ def get_course_attainment_configuration(year,dept,courseCode):
             {"$unwind":"$courseWiseAttainmentConfiguration"},
             {"$match":{"courseWiseAttainmentConfiguration.courseCode":courseCode}},
             {"$project":{"subGenericAttainmentConfigurationList":1,"courseWiseAttainmentConfiguration":1,"_id":0}}
-        ])
+        ]) 
     course_attainment_configuration = []
     for attainment in attainment_configuration:
         course_attainment_configuration.append(attainment)

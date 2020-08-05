@@ -58,7 +58,7 @@ def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3','5']):
                     for co_num in range(1,7):
                         if course_details[j]["Co_details"][k]["coNumber"] == co_num:
                             course_details[j]["Co_details"][k]["blooms_details"] = blooms_level[co_num-1]
-        hod_data.append(course_details)
+        hod_data.append(course_details) 
     return jsonify({"hod_data": hod_data})
 
 @app.route('/faculty/academicyear/<facultyGivenId>')
