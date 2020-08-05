@@ -3,7 +3,8 @@ from pymongo import MongoClient
 
 db = MongoClient(host='localhost',port = 27017)
 
-mydatabase = db['nba-analytics-backend']
+#mydatabase = db['nba-analytics-backend']
+mydatabase = db['dhi-mite']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
 lesson_plan = mydatabase['dhi_lesson_plan']
