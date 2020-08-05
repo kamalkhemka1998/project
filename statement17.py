@@ -1,9 +1,9 @@
 from pymongo import MongoClient
 # from flask_pymongo import PyMongo
 
-db = MongoClient(host='localhost', port = 27017)
+db = MongoClient(host='localhost',port = 27017)
 
-mydatabase = db['dhi-mite']
+mydatabase = db['nba-analytics-backend']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
 lesson_plan = mydatabase['dhi_lesson_plan']
@@ -48,7 +48,17 @@ def get_terms_hod(academicYear,dept):
         {'$group' : {'_id' : 'null', "hod_terms":{'$addToSet' : "$departments.termNumber"}}},
         {'$project' : {'_id': 0}}
         ])
-    return [q for q in querry]
+    return [q for q in querry] 
+
+def get_facultyId(academicYear,dept,terms):
+    query = lesson_plan.aggregate([
+    {'$match' : {
+    "academicYear":academicYear, "departments.termNumber":{ '$in' : terms}, "departments.deptId":dept}}, 
+    {'$unwind': "$faculties"},
+    {'$group' : { '_id': 'null', "faculty_id": {'$addToSet' : "$faculties.facultyGivenId"}}},
+    {'$project' :{'_id':0,"faculty_id":1}}
+    ])
+    return [q for q in query]
 
 def get_academicYear_faculty(facultyGivenId):
     querry = lesson_plan.aggregate([
@@ -72,23 +82,27 @@ def  get_terms_faculty(facultyGivenId, academicYear):
     return [q for q in querry]
 
 
-def get_course_of_faculty():
+def get_course_of_faculty(facultyGivenId,year,terms):
     courses = lesson_plan.aggregate([
             {"$unwind":"$faculties"},
             {"$unwind":"$departments"},
-            {"$match":{"academicYear":"2018-19","faculties.facultyGivenId":"583","departments.termNumber":"5"}},
-            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"_id":0}}
+            {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :terms}}},
+            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
         ])
+    codes_info = []
     codes = []
     for course in courses:
-        codes.append(course)
-    return codes
+        code = course["courseCode"]
+        bloom = get_bloomsLevel_Of_Cos("583","2018-19",terms,code)
+        codes_info.append(course)
+        codes_info.append({"Co_Details":bloom})
+    return codes_info
 
-def get_course_attainment_configuration():
+def get_course_attainment_configuration(year,dept,courseCode):
     attainment_configuration = generic_attainment_configuration.aggregate([
-            {"$match":{"academicYear":"2018-19","deptId":"CS"}},
+            {"$match":{"academicYear": year,"deptId":dept}},
             {"$unwind":"$courseWiseAttainmentConfiguration"},
-            {"$match":{"courseWiseAttainmentConfiguration.courseCode":"17CS42"}},
+            {"$match":{"courseWiseAttainmentConfiguration.courseCode":courseCode}},
             {"$project":{"subGenericAttainmentConfigurationList":1,"courseWiseAttainmentConfiguration":1,"_id":0}}
         ])
     course_attainment_configuration = []
@@ -97,27 +111,36 @@ def get_course_attainment_configuration():
     return course_attainment_configuration
     
 
-def get_course_attainment_information():
+def get_course_attainment_information(year,term,courseCode,section,facultyGivenId):
     attainment_data = generic_attainment_data.aggregate([
             {"$unwind":"$courseOutcomeDetailsForAttainment"},
             {"$unwind":"$faculties"},
-            {"$match":{"year":"2018-19","termNumber":"4","courseDetails.courseCode":"17CS42","section":"A","faculties.facultyGivenId":"583"}},
+            {"$match":{"year":year,"termNumber":{"$in":term},"courseDetails.courseCode":courseCode,"section":section,"faculties.facultyGivenId":facultyGivenId}},
             {"$group": {"_id": "null", "uniqueValues": {"$addToSet": "$courseOutcomeDetailsForAttainment"}}},
             {"$project":{"_id":0,"uniqueValues.coNumber":1,"uniqueValues.totalAttainment":1,"uniqueValues.directAttainment":1,"uniqueValues.indirectAttainment":1,"uniqueValues.coTitle":1,}},
-        ])
+        {"$sort": {"uniqueValues.coNumber":1}}])
     course_attainment_data = []
+    bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,term,courseCode)
     for attainment in attainment_data:
         course_attainment_data.append(attainment)
+    a = course_attainment_data[0]['uniqueValues']
+    for i in a:
+        for j in bloom:
+            if(j.get('CO') == i.get('coNumber')):
+                i["Difficulty"] = j["Difficulty"]
     return course_attainment_data
 
-def get_bloomsLevel_Of_Cos():
+def get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode):
     blooms = lesson_plan.aggregate([
             {"$unwind":"$faculties"},
             {"$unwind":"$departments"},
             {"$unwind":"$execution"},
             {"$unwind":"$execution.couseOutcomes"},
-            {"$match":{"faculties.facultyGivenId":"583","academicYear":"2018-19","departments.termNumber":"4","courseCode":"17CS42"}},
-            {"$group":{"_id":{"CO":"$execution.couseOutcomes","Module":"$execution.moduleNumber","Lesson":"$execution.lessonNumber"},"blooms":{"$addToSet":"$execution.bloomsLevel"}}}
+            {"$match":{"faculties.facultyGivenId":facultyGivenId,"academicYear":academicYear,"departments.termNumber":{'$in' :term},
+            "courseCode":courseCode}},
+            {"$group":{"_id":{"CO":"$execution.couseOutcomes","Module":"$execution.moduleNumber","Lesson":"$execution.lessonNumber",
+            "Topics":"$execution.topicsCovered"}
+            ,"blooms":{"$addToSet":"$execution.bloomsLevel"}}}
         ])
     blooms_level = []
     for bloom in blooms:
@@ -176,7 +199,6 @@ def get_bloomsLevel_Of_Cos():
     return m
 
 def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
-    count = 0
     diff1 = 0
     diff2 = 0
     diff3 = 0
@@ -267,4 +289,5 @@ def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
     CO4["Difficulty"] = diff4
     CO5["Difficulty"] = diff5
     CO6["Difficulty"] = diff6
-    return CO1,CO2,CO3,CO4,CO5,CO6
+    return CO1,CO2,CO3,CO4,CO5,CO6,
+
