@@ -72,14 +72,14 @@ def get_terms_faculty(facultyGivenId,academicYear):
     faculty_terms_data = st_17.get_terms_faculty(facultyGivenId,academicYear)
     return jsonify({"faculty_terms":faculty_terms_data})
 
-@app.route("/courseCodes/<facultyGivenId>/<year>/<term>")
-def get_course_codes(facultyGivenId = '464',year = '2018-19',term = ['3'] ):
+@app.route("/courseCodes")
+def get_course_codes(facultyGivenId = '583',year = '2018-19',term = ['4'] ):
     course_codes = st_17.get_course_of_faculty(facultyGivenId,year,term)
     print(course_codes)
     return jsonify({"res":course_codes})
 
 @app.route("/courseAttainmentData")
-def get_course_attainment_data(year = '2018-19',term = ['3'],courseCode = '17EC36',section='B',facultyGivenId = '464'):
+def get_course_attainment_information(year = '2018-19',term = ['4'],courseCode = '17CS42',section='A',facultyGivenId = '583'):
     course_attainment_data = st_17.get_course_attainment_information(year,term,courseCode,section,facultyGivenId)
     return jsonify({"res":course_attainment_data})
 
@@ -104,15 +104,9 @@ def get_info_of_co():
     test_co_details = faculty.get_co_data()
     return jsonify({'test_co_details':test_co_details})
 
-<<<<<<< HEAD
 @app.route('/getBlooms/<facultyId>/<academicYear>/<deptNumber>/<courseCode>')
 def get_bloomsLevel_of_cos(facultyId,academicYear,deptNumber,courseCode):
     blooms = st_17.get_bloomsLevel_Of_Cos(facultyId,academicYear,deptNumber,courseCode)
-=======
-@app.route('/getBlooms')
-def get_bloomsLevel_of_cos(facultyGivenId = '583', academicYear = '2018-19', term = '4' ,courseCode = '17CS42'):
-    blooms = st_17.get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode)
->>>>>>> 2e290a87436ed951d9605a1a73cbbc8975414826
     return jsonify({"res":blooms})
 
 if __name__ == "__main__":
