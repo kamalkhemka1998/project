@@ -27,8 +27,8 @@ def get_dept_term_principal(academicYear):
     return [q for q in querry]
 
 def get_dept_hod(employeeGivenId):
-    dept_hod = dhi_user.find({'employeeGivenId': employeeGivenId },{'deptId':1})
-    return [dept for dept in  dept_hod]
+    query =dhi_user.find({"employeeGivenId":employeeGivenId}, {'_id':0, 'deptId' : 1 })
+    return [q for q in query]
 
 def get_academicYear_hod(dept):
     querry = lesson_plan.aggregate([

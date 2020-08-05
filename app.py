@@ -24,7 +24,8 @@ def get_dept_term_principal(academicYear = '2018-19'):
 @app.route('/hod/dept')
 def dep_hod(employeeGivenId = '583'):
     dept_hod = st_17.get_dept_hod(employeeGivenId)
-
+    return jsonify({"dept_hod":dept_hod})
+    
 @app.route('/hod/academicyear')
 def get_academicYear_hod(dept_hod = 'CS' ,employeeGivenId = '583'):
     hod_academicYear = st_17.get_academicYear_hod(dept_hod) 
@@ -79,7 +80,7 @@ def get_course_codes(facultyGivenId = '464',year = '2018-19',term = ['3'] ):
     return jsonify({"res":course_codes})
 
 @app.route("/courseAttainmentData")
-def get_course_attainment_data(year = '2018-19',term = ['3'],courseCode = '17EC36',section='B',facultyGivenId = '464'):
+def get_course_attainment_data(year = '2018-19',term = '3',courseCode = '17MAT31',section='B',facultyGivenId = '403'):
     course_attainment_data = st_17.get_course_attainment_information(year,term,courseCode,section,facultyGivenId)
     return jsonify({"res":course_attainment_data})
 
