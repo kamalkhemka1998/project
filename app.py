@@ -65,6 +65,7 @@ def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3','5']):
 #facultyGivenId = '492'
 def get_academicYear_faculty(facultyGivenId):
     faculty_academicYear = st_17.get_academicYear_faculty(facultyGivenId)
+    print(faculty_academicYear)
     return jsonify({"faculty_academicYear":faculty_academicYear})
 
 @app.route("/faculty/terms/<facultyGivenId>/<academicYear>")
@@ -80,7 +81,7 @@ def get_course_codes(facultyGivenId = '464',year = '2018-19',term = ['3'] ):
     return jsonify({"res":course_codes})
 
 @app.route("/courseAttainmentData")
-def get_course_attainment_data(year = '2018-19',term = '3',courseCode = '17MAT31',section='B',facultyGivenId = '403'):
+def get_course_attainment_information(year = '2018-19',term = ['4'],courseCode = '17CS42',section='A',facultyGivenId = '583'):
     course_attainment_data = st_17.get_course_attainment_information(year,term,courseCode,section,facultyGivenId)
     return jsonify({"res":course_attainment_data})
 
@@ -100,14 +101,14 @@ def get_cos_of_courses_of_department():
     get_cos_of_courses_of_dept = hod.get_cos_of_all_courses_of_a_dept()
     return jsonify({'cos_of_courses_of_dept':get_cos_of_courses_of_dept})
 
-@app.route('/assessment')
-def get_info_of_co():
-    test_co_details = faculty.get_co_data()
+@app.route('/faculty/data_table/<academicYear>/<facultyId>/<termNumber>/<section>/<courseCode>/<int:coNumber>/<deptId>/<courseType>')
+def get_info_of_co(academicYear,facultyId,termNumber,section,courseCode,coNumber,deptId,courseType):
+    test_co_details = faculty.get_co_data(academicYear,facultyId,termNumber,section,courseCode,coNumber,deptId,courseType)
     return jsonify({'test_co_details':test_co_details})
 
-@app.route('/getBlooms')
-def get_bloomsLevel_of_cos(facultyGivenId = '583', academicYear = '2018-19', term = '4' ,courseCode = '17CS42'):
-    blooms = st_17.get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode)
+@app.route('/getBlooms/<facultyId>/<academicYear>/<deptNumber>/<courseCode>')
+def get_bloomsLevel_of_cos(facultyId,academicYear,deptNumber,courseCode):
+    blooms = st_17.get_bloomsLevel_Of_Cos(facultyId,academicYear,deptNumber,courseCode)
     return jsonify({"res":blooms})
 
 if __name__ == "__main__":

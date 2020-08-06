@@ -84,7 +84,7 @@ def get_cos_of_courses(facultyId,academicYear,termNumber):
                             "section":"$section",
                             "courseName":"$courseDetails.courseName",
                             "courseType":"$courseDetails.courseType",
-                            "deptId":"$deptid",
+                            "deptId":"$deptId",
                             "termNumber":"$termNumber"
                         },
                         "average_co_attainments":{"$avg":"$courseOutcomeDetailsForAttainment.totalAttainment"},
@@ -141,71 +141,73 @@ def get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coN
             "indirectMethods" : "$courseOutcomeDetailsForAttainment.indirectMethods",
             "_id" : 0
             } 
+        },
+        {
+            "$limit":1
         }
         ] )
     
     co_methods = []    
 
     for field in coDetails:
-        co_methods.append([field])
-      
-    co_methods=co_methods[0]
+        co_methods.append(field)
 
     return co_methods
 
-def get_co_data():
-    coMethods = get_co_methods(academicYear="2018-19",facultyGivenId="67",termNumber="7",section="A",courseCode="15IM71",coNumber=1)
+def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumber,deptId,courseType):
+    coMethods = get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coNumber)
     test_co_details = {}
     directMethods = []
-   
-    directMethods = coMethods[0]['directMethods']
-    indirectMethods = coMethods[0]['indirectMethods']
+    if len(coMethods) > 0:
+    
+        directMethods = coMethods[0]['directMethods']
+        indirectMethods = coMethods[0]['indirectMethods']
 
-    test_co_details['courseCode'] = coMethods[0]['courseCode']
-    test_co_details['courseName'] = coMethods[0]['courseName']
-    test_co_details['facultyId'] = coMethods[0]['facultyId']
-    test_co_details['facultyName'] = coMethods[0]['facultyName']
-    test_co_details['direct_attainment_details'] = []
-    test_co_details['indirect_attainment_details'] = []
-   
-    weightage = get_weightage(academicYear="2018-19",deptId="IS",courseType="THEORY")
+        test_co_details['courseCode'] = coMethods[0]['courseCode']
+        test_co_details['courseName'] = coMethods[0]['courseName']
+        test_co_details['facultyId'] = coMethods[0]['facultyId']
+        test_co_details['facultyName'] = coMethods[0]['facultyName']
+        test_co_details['direct_attainment_details'] = []
+        test_co_details['indirect_attainment_details'] = []
+    
+        weightage = get_weightage(academicYear,deptId,courseType)
 
-    firstLevel = weightage[0]['firstLevelWeightage']
-    test_co_details['directAttainmentWeightage'] = firstLevel['directMethodWeightage']
-    test_co_details['indirectAttainmentWeightage'] = firstLevel['indirectMethodWeightage']
+        firstLevel = weightage[0]['firstLevelWeightage']
+        test_co_details['directAttainmentWeightage'] = firstLevel['directMethodWeightage']
+        test_co_details['indirectAttainmentWeightage'] = firstLevel['indirectMethodWeightage']
 
-    for method in directMethods:
-        if method['methodName'] == "IA":
-            method_details = method['nextLevelAttainments']
+        for method in directMethods:
+            if method['methodName'] == "IA":
+                method_details = method['nextLevelAttainments']
+            
+            elif method['methodName'] == "Other Assessment":
+                sub = []
+                sub = method['subAssessmentMethods']
+                method_details = sub[0]['nextLevelAttainments']
         
-        elif method['methodName'] == "Other Assessment":
-            sub = []
-            sub = method['subAssessmentMethods']
-            method_details = sub[0]['nextLevelAttainments']
-      
-        else:
-            sub = []
-            sub.append({
-                "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
-                "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents']
-            })
-            method_details = sub
+            else:
+                sub = []
+                sub.append({
+                    "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
+                    "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents']
+                })
+                method_details = sub
 
-        test_co_details['direct_attainment_details'].append({
-            "methodName" : method['methodName'],
-            "description" : method['methodDescription'],
-            "attainment" : method['attainment'],
-            "attainmentPercentage" : method['attainmentPercentage'],
-            "method_details" : method_details
-            })
+            test_co_details['direct_attainment_details'].append({
+                "methodName" : method['methodName'],
+                "description" : method['methodDescription'],
+                "attainment" : method['attainment'],
+                "attainmentPercentage" : method['attainmentPercentage'],
+                "method_details" : method_details
+                })
 
-    for method in indirectMethods:
-        test_co_details['indirect_attainment_details'].append({
-            "methodName" : method['methodName'],
-            "description" : method['methodDescription'],
-            "attainment" : method['attainment'],
-            "attainmentPercentage" : method['attainmentPercentage']
-            })
+        for method in indirectMethods:
+            test_co_details['indirect_attainment_details'].append({
+                "methodName" : method['methodName'],
+                "description" : method['methodDescription'],
+                "attainment" : method['attainment'],
+                "attainmentPercentage" : method['attainmentPercentage']
+                })
     
     return test_co_details
     
