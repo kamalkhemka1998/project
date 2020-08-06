@@ -38,28 +38,28 @@ def get_term_hod(academicYear = "2018-19",dept = 'CS'):
 
 @app.route('/hod/academicYear/dept')
 # lists all the facultyId in hod's dept, invokes the method... works for principal too, only that we needn't find dept it'll be choosen
-def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3','5']):
-    data = st_17.get_facultyId(academicYear,dept,terms)
-    faculty_ids = data[0]['faculty_id'] 
-    hod_data = []
-    for fid in faculty_ids:
-        course_details = st_17.get_course_of_faculty(fid,academicYear,terms)
-        for j in range(len(course_details)):
-            courseCode = course_details[j]['courseCode']
-            section = course_details[j]['departments']['section']
-            term = course_details[j]['departments']['termNumber']
-            course_details[j]["facultyId"] = fid
-            course_details[j]["Co_details"] = []
-            course_attainment_details = st_17.get_course_attainment_information(academicYear,term,courseCode,section,fid)
-            blooms_level = st_17.get_bloomsLevel_Of_Cos(fid, academicYear, term,courseCode)
-            if course_attainment_details != []:
-                for k in range(len(course_attainment_details[0]["uniqueValues"])):
-                    course_details[j]["Co_details"].append(course_attainment_details[0]["uniqueValues"][k])
-                    for co_num in range(1,7):
-                        if course_details[j]["Co_details"][k]["coNumber"] == co_num:
-                            course_details[j]["Co_details"][k]["blooms_details"] = blooms_level[co_num-1]
-        hod_data.append(course_details)
-    return jsonify({"hod_data": hod_data})
+def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['4']):
+    list_faculty = st_17.get_facultyId(academicYear,dept,terms)
+    hod_data = list()
+    for fid in list_faculty[0]['faculty_id']:
+        data = st_17.get_course_of_faculty(fid,academicYear, terms)
+        for d in data:
+            section = d['departments']['section']
+            term = list(d["departments"]["termNumber"])
+            courseCode = d["courseCode"]
+            courseO_att_info = st_17.get_course_attainment_information(academicYear,term,courseCode,section,fid)
+            if len(courseO_att_info) == 0:
+                courseO_att_info = st_17.get_course_attainment_configuration(academicYear,dept,courseCode)
+            if len(courseO_att_info) != 0:
+                for i in range(len(courseO_att_info[0]["uniqueValues"])):
+                    for j in range(d["Co_Details"]):
+                        print("\n\n",d["Co_Details"][i])
+                        print('\n',courseO_att_info[0]["uniqueValues"][i])
+                        if d["Co_Details"][j]["CO"] == courseO_att_info[0]["uniqueValues"][i][ "coNumber"]:
+                            d["Co_Details"][j].extend(courseO_att_info[0]["uniqueValues"][i])
+                            break
+            hod_data.append( d)
+        return jsonify({"hod_data": hod_data})
 
 @app.route('/faculty/academicyear/<facultyGivenId>')
 #facultyGivenId = '492'
