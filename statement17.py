@@ -1,8 +1,9 @@
 from pymongo import MongoClient
 # from flask_pymongo import PyMongo
 
-db = MongoClient(host='localhost', port = 27017)
+db = MongoClient(host='localhost',port = 27017)
 
+#mydatabase = db['nba-analytics-backend']
 mydatabase = db['analytics']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
@@ -89,10 +90,15 @@ def get_course_of_faculty(facultyGivenId,year,terms):
             {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :terms}}},
             {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
         ])
+    codes_info = []
     codes = []
     for course in courses:
-        codes.append(course)
-    return codes
+        code = course["courseCode"]
+        bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,terms,code)
+        course["Co_Details"] = bloom
+        codes_info.append(course)
+       
+    return codes_info
 
 def get_course_attainment_configuration(year,dept,courseCode):
     attainment_configuration = generic_attainment_configuration.aggregate([
@@ -100,7 +106,7 @@ def get_course_attainment_configuration(year,dept,courseCode):
             {"$unwind":"$courseWiseAttainmentConfiguration"},
             {"$match":{"courseWiseAttainmentConfiguration.courseCode":courseCode}},
             {"$project":{"subGenericAttainmentConfigurationList":1,"courseWiseAttainmentConfiguration":1,"_id":0}}
-        ]) 
+        ])
     course_attainment_configuration = []
     for attainment in attainment_configuration:
         course_attainment_configuration.append(attainment)
@@ -111,13 +117,20 @@ def get_course_attainment_information(year,term,courseCode,section,facultyGivenI
     attainment_data = generic_attainment_data.aggregate([
             {"$unwind":"$courseOutcomeDetailsForAttainment"},
             {"$unwind":"$faculties"},
-            {"$match":{"year":year,"termNumber":term,"courseDetails.courseCode":courseCode,"section":section,"faculties.facultyGivenId":facultyGivenId}},
+            {"$match":{"year":year,"termNumber":{"$in":term},"courseDetails.courseCode":courseCode,"section":section,"faculties.facultyGivenId":facultyGivenId}},
             {"$group": {"_id": "null", "uniqueValues": {"$addToSet": "$courseOutcomeDetailsForAttainment"}}},
             {"$project":{"_id":0,"uniqueValues.coNumber":1,"uniqueValues.totalAttainment":1,"uniqueValues.directAttainment":1,"uniqueValues.indirectAttainment":1,"uniqueValues.coTitle":1,}},
         {"$sort": {"uniqueValues.coNumber":1}}])
     course_attainment_data = []
+    bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,term,courseCode)
     for attainment in attainment_data:
         course_attainment_data.append(attainment)
+    if len(course_attainment_data) > 0:
+        a = course_attainment_data[0]['uniqueValues']
+        for i in a:
+            for j in bloom:
+                if(j.get('CO') == i.get('coNumber')):
+                    i["Difficulty"] = j["Difficulty"]
     return course_attainment_data
 
 def get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode):
@@ -126,7 +139,7 @@ def get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode):
             {"$unwind":"$departments"},
             {"$unwind":"$execution"},
             {"$unwind":"$execution.couseOutcomes"},
-            {"$match":{"faculties.facultyGivenId":facultyGivenId,"academicYear":academicYear,"departments.termNumber":term,
+            {"$match":{"faculties.facultyGivenId":facultyGivenId,"academicYear":academicYear,"departments.termNumber":{'$in' :term},
             "courseCode":courseCode}},
             {"$group":{"_id":{"CO":"$execution.couseOutcomes","Module":"$execution.moduleNumber","Lesson":"$execution.lessonNumber",
             "Topics":"$execution.topicsCovered"}
@@ -189,7 +202,6 @@ def get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode):
     return m
 
 def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
-    count = 0
     diff1 = 0
     diff2 = 0
     diff3 = 0
@@ -280,4 +292,5 @@ def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
     CO4["Difficulty"] = diff4
     CO5["Difficulty"] = diff5
     CO6["Difficulty"] = diff6
-    return CO1,CO2,CO3,CO4,CO5,CO6
+    return CO1,CO2,CO3,CO4,CO5,CO6,
+
