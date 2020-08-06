@@ -95,7 +95,7 @@ def get_course_of_faculty(facultyGivenId,year,terms):
     for course in courses:
         code = course["courseCode"]
         bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,terms,code)
-        course["Co_Details"] = bloom
+        course["Co_details"] = bloom
         codes_info.append(course)
        
     return codes_info
@@ -292,5 +292,5 @@ def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
     CO4["Difficulty"] = diff4
     CO5["Difficulty"] = diff5
     CO6["Difficulty"] = diff6
-    return CO1,CO2,CO3,CO4,CO5,CO6,
+    return CO1,CO2,CO3,CO4,CO5,CO6
 
