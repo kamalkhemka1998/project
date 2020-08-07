@@ -85,9 +85,14 @@ def  get_terms_faculty(facultyGivenId, academicYear):
 
 def get_course_of_faculty(facultyGivenId,year,term):
     courses = lesson_plan.aggregate([
+<<<<<<< HEAD
             {"$unwind":"$faculties"},
             {"$unwind":"$departments"},
             {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :term}}},
+=======
+        {'$unwind' : "$faculties" },
+            {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :terms}}},
+>>>>>>> dc2a767ef89e4f8a93b66e91fa11dcca6ae4d3bd
             {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
         ])
     codes_info = []
