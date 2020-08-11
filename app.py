@@ -16,10 +16,15 @@ def get_academicYear_principal():
     year = st_17.get_academicYear_principal()
     return jsonify({"year":year})
 
-@app.route('/principal/department_term')
-def get_dept_term_principal(academicYear = '2018-19'):
-    data = st_17.get_dept_term_principal(academicYear)
-    return jsonify({"dept_and_term":data})
+@app.route('/principal/term/<academicYear>')
+def get_term_principal(academicYear = '2018-19'):
+    data = st_17.get_term_principal(academicYear)
+    return jsonify({"terms":data[0]['terms']})
+
+@app.route('/principal/departments/<year>')
+def get_dept_principal(year = '2018-19',terms = ['3']):
+    data = st_17.get_dept_principal(year,terms)
+    return jsonify({"departments":data[0]['dept']})
 
 @app.route('/hod/dept/<employeeGivenId>')
 def dep_hod(employeeGivenId = '583'):
@@ -36,9 +41,10 @@ def get_term_hod(academicYear = "2018-19",dept = 'CS'):
     data = st_17.get_terms_hod(academicYear,dept)
     return jsonify( { "hod_terms" : data} )
 
-@app.route('/hod/details/<academicYear>/<dept>')
+@app.route('/hod/details/<academicYear>/<dept>/<t>')
 # lists all the facultyId in hod's dept, invokes the method... works for principal too, only that we needn't find dept it'll be choosen
-def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3']):
+def get_facultyId_dept(academicYear = '2018-19', dept='CS',t = '3'):
+    terms = list(t)
     list_faculty = st_17.get_facultyId(academicYear,dept,terms)
     # print(list_faculty)
     hod_data = list()

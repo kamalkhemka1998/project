@@ -15,17 +15,29 @@ def get_academicYear_principal():
     querry = lesson_plan.aggregate([ {'$group' : { '_id': 'null',"academicYear" : {'$addToSet' : "$academicYear"} } }  ])
     return [q for q in querry]
     
-def get_dept_term_principal(academicYear):
+def get_term_principal(academicYear):
     querry = lesson_plan.aggregate([
             {'$match' : { "academicYear" : academicYear }},
-            {'$project' : { "departments.deptId" : 1, "departments.termNumber":1 }},
+            {'$project' : { "departments.termNumber":1 }},
             {'$unwind' : "$departments"},
             {'$group' : {'_id': 'null', 
-                "depts" : {'$addToSet' : "$departments.deptId"},
                 "terms" : {'$addToSet' : "$departments.termNumber"}
-                }}
+                }},
+                {'$project':{'_id':0,'terms':1}}
         ])
     return [q for q in querry]
+
+def get_dept_principal(academicYear,terms):
+    query =lesson_plan.aggregate([
+    {'$match': {
+        "academicYear":academicYear,
+        "departments.termNumber": {'$in':terms}
+        }},
+        {'$unwind': '$departments'},
+        {'$group': {'_id': 'null', "dept":{"$addToSet":"$departments.deptId"}}},
+        {'$project': {'_id':0, "dept":1}}
+    ])
+    return [q for q in query]
 
 def get_dept_hod(employeeGivenId):
     query =dhi_user.find({"employeeGivenId":employeeGivenId}, {'_id':0, 'deptId' : 1 })
@@ -87,7 +99,7 @@ def get_course_of_faculty(facultyGivenId,year,terms):
     courses = lesson_plan.aggregate([
         {'$unwind' : "$faculties" },
             {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :terms}}},
-            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
+            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"facultyName":"$faculties.facultyName","_id":0}}
         ])
     codes_info = []
     codes = []
