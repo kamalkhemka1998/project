@@ -21,43 +21,64 @@ def get_dept_term_principal(academicYear = '2018-19'):
     data = st_17.get_dept_term_principal(academicYear)
     return jsonify({"dept_and_term":data})
 
-@app.route('/hod/dept')
+@app.route('/hod/dept/<employeeGivenId>')
 def dep_hod(employeeGivenId = '583'):
     dept_hod = st_17.get_dept_hod(employeeGivenId)
-
-@app.route('/hod/academicyear')
+    return jsonify({"dept_hod":dept_hod})
+    
+@app.route('/hod/academicyear/<dept_hod>/<employeeGivenId>')
 def get_academicYear_hod(dept_hod = 'CS' ,employeeGivenId = '583'):
     hod_academicYear = st_17.get_academicYear_hod(dept_hod) 
     return jsonify({"hod_academicYear":hod_academicYear})
 
-@app.route('/hod/terms')
+@app.route('/hod/terms/<academicYear>/<dept>')
 def get_term_hod(academicYear = "2018-19",dept = 'CS'):
     data = st_17.get_terms_hod(academicYear,dept)
     return jsonify( { "hod_terms" : data} )
 
-@app.route('/hod/academicYear/dept')
+@app.route('/hod/details/<academicYear>/<dept>')
 # lists all the facultyId in hod's dept, invokes the method... works for principal too, only that we needn't find dept it'll be choosen
-def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3','5']):
-    data = st_17.get_facultyId(academicYear,dept,terms)
-    faculty_ids = data[0]['faculty_id'] 
-    hod_data = []
-    for fid in faculty_ids:
-        course_details = st_17.get_course_of_faculty(fid,academicYear,terms)
-        for j in range(len(course_details)):
-            courseCode = course_details[j]['courseCode']
-            section = course_details[j]['departments']['section']
-            term = course_details[j]['departments']['termNumber']
-            course_details[j]["facultyId"] = fid
-            course_details[j]["Co_details"] = []
-            course_attainment_details = st_17.get_course_attainment_information(academicYear,term,courseCode,section,fid)
-            blooms_level = st_17.get_bloomsLevel_Of_Cos(fid, academicYear, term,courseCode)
-            if course_attainment_details != []:
-                for k in range(len(course_attainment_details[0]["uniqueValues"])):
-                    course_details[j]["Co_details"].append(course_attainment_details[0]["uniqueValues"][k])
-                    for co_num in range(1,7):
-                        if course_details[j]["Co_details"][k]["coNumber"] == co_num:
-                            course_details[j]["Co_details"][k]["blooms_details"] = blooms_level[co_num-1]
-        hod_data.append(course_details)
+def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3']):
+    list_faculty = st_17.get_facultyId(academicYear,dept,terms)
+    # print(list_faculty)
+    hod_data = list()
+    for fid in list_faculty[0]['faculty_id']:
+        data = st_17.get_course_of_faculty(fid,academicYear, terms)
+        for d in data:
+            section = d['departments'][0]['section']
+            d['termNumber'] = d["departments"][0]["termNumber"]
+            term = list(d["departments"][0]["termNumber"])
+            d.pop('departments')
+            d['section'] = section
+            courseCode = d["courseCode"]
+            courseO_att_info = st_17.get_course_attainment_information(academicYear,term,courseCode,section,fid)
+            if len(courseO_att_info) != 0:
+                for i in range(len(courseO_att_info[0]["uniqueValues"])):
+                    for j in range(len(d["Co_details"])):
+                        if d["Co_details"][j]['Difficulty'] == 0:
+                            continue
+                        if d["Co_details"][j]["CO"] == courseO_att_info[0]["uniqueValues"][i][ "coNumber"]:
+                            # info = list(courseO_att_info[0]["uniqueValues"][i])
+                            # d["Co_Details"][j].extend(info)
+                            d["Co_details"][j]["co_difficultyLevel"] = courseO_att_info[0]["uniqueValues"][i]["Difficulty"] 
+                            d["Co_details"][j]["indirectAttainment"] = courseO_att_info[0]["uniqueValues"][i]["indirectAttainment"] 
+                            d["Co_details"][j]["totalAttainment"] = courseO_att_info[0]["uniqueValues"][i]["totalAttainment"]
+                            d["Co_details"][j]["directAttainment"] = courseO_att_info[0]["uniqueValues"][i]["directAttainment"]
+                            break
+            else:
+                for j in range(len(d["Co_details"])):
+                    d["Co_details"][j]["co_difficultyLevel"] = 30
+                    d["Co_details"][j]["indirectAttainment"] = 20
+                    d["Co_details"][j]["totalAttainment"] = 40
+                    d["Co_details"][j]["directAttainment"] = 50
+                # courseO_att_info = st_17.get_course_attainment_configuration(academicYear,dept,courseCode)
+            num_cos = len(d["Co_details"])
+            sum_diff = 0
+            for j in range( num_cos ):
+                sum_diff += d["Co_details"][j]["Difficulty"]
+            crs_diff_levl = sum_diff/num_cos 
+            d["course_difficultyLevel_per"] = crs_diff_levl
+            hod_data.append( d)
     return jsonify({"hod_data": hod_data})
 
 @app.route('/faculty/academicyear/<facultyGivenId>')
@@ -73,11 +94,47 @@ def get_terms_faculty(facultyGivenId,academicYear):
     faculty_terms_data = st_17.get_terms_faculty(facultyGivenId,academicYear)
     return jsonify({"faculty_terms":faculty_terms_data})
 
-@app.route("/courseCodes")
-def get_course_codes(facultyGivenId = '583',year = '2018-19',term = ['4'] ):
-    course_codes = st_17.get_course_of_faculty(facultyGivenId,year,term)
-    print(course_codes)
-    return jsonify({"res":course_codes})
+@app.route("/courseCodes/<fid>/<year>")
+def get_course_codes(fid,year,term = ['4']):
+    data = st_17.get_course_of_faculty(fid,year,term)
+    faculty_data = list()
+    for d in data:
+        section = d['departments']['section']
+        d['termNumber'] = d["departments"]["termNumber"]
+        term = list(d["departments"]["termNumber"])
+        d.pop('departments')
+        d['section'] = section
+        
+        courseCode = d["courseCode"]
+        courseO_att_info = st_17.get_course_attainment_information(year,term,courseCode,section,fid)
+        if len(courseO_att_info) != 0:
+            for i in range(len(courseO_att_info[0]["uniqueValues"])):
+                for j in range(len(d["Co_details"])):
+                    if d["Co_details"][j]['Difficulty'] == 0:
+                        continue
+                    if d["Co_details"][j]["CO"] == courseO_att_info[0]["uniqueValues"][i][ "coNumber"]:
+                        # info = list(courseO_att_info[0]["uniqueValues"][i])
+                        # d["Co_Details"][j].extend(info)
+                        d["Co_details"][j]["co_difficultyLevel"] = courseO_att_info[0]["uniqueValues"][i]["Difficulty"] 
+                        d["Co_details"][j]["indirectAttainment"] = courseO_att_info[0]["uniqueValues"][i]["indirectAttainment"] 
+                        d["Co_details"][j]["totalAttainment"] = courseO_att_info[0]["uniqueValues"][i]["totalAttainment"]
+                        d["Co_details"][j]["directAttainment"] = courseO_att_info[0]["uniqueValues"][i]["directAttainment"]
+                        break
+        else:
+            for j in range(len(d["Co_details"])):
+                d["Co_details"][j]["co_difficultyLevel"] = 30
+                d["Co_details"][j]["indirectAttainment"] = 20
+                d["Co_details"][j]["totalAttainment"] = 40
+                d["Co_details"][j]["directAttainment"] = 50
+            # courseO_att_info = st_17.get_course_attainment_configuration(academicYear,dept,courseCode)
+        num_cos = len(d["Co_details"])
+        sum_diff = 0
+        for j in range( num_cos ):
+            sum_diff += d["Co_details"][j]["Difficulty"]
+        crs_diff_levl = sum_diff/num_cos 
+        d["course_difficultyLevel_per"] = crs_diff_levl
+        faculty_data.append(d)
+    return jsonify({"faculty": faculty_data})
 
 @app.route("/courseAttainmentData")
 def get_course_attainment_information(year = '2018-19',term = ['4'],courseCode = '17CS42',section='A',facultyGivenId = '583'):

@@ -4,7 +4,7 @@ from pymongo import MongoClient
 db = MongoClient(host='localhost',port = 27017)
 
 #mydatabase = db['nba-analytics-backend']
-mydatabase = db['dhi-mite']
+mydatabase = db['nba-analytics-backend']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
 lesson_plan = mydatabase['dhi_lesson_plan']
@@ -28,8 +28,8 @@ def get_dept_term_principal(academicYear):
     return [q for q in querry]
 
 def get_dept_hod(employeeGivenId):
-    dept_hod = dhi_user.find({'employeeGivenId': employeeGivenId },{'deptId':1})
-    return [dept for dept in  dept_hod]
+    query =dhi_user.find({"employeeGivenId":employeeGivenId}, {'_id':0, 'deptId' : 1 })
+    return [q for q in query]
 
 def get_academicYear_hod(dept):
     querry = lesson_plan.aggregate([
@@ -83,20 +83,20 @@ def  get_terms_faculty(facultyGivenId, academicYear):
     return [q for q in querry]
 
 
-def get_course_of_faculty(facultyGivenId,year,terms):
+def get_course_of_faculty(facultyGivenId,year,term):
     courses = lesson_plan.aggregate([
-            {"$unwind":"$faculties"},
-            {"$unwind":"$departments"},
-            {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :terms}}},
-            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
+        {'$unwind' : "$faculties" },
+        {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :term}}},
+        {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
         ])
     codes_info = []
     codes = []
     for course in courses:
         code = course["courseCode"]
-        bloom = get_bloomsLevel_Of_Cos("583","2018-19",terms,code)
+        bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,term,code)
+        course["Co_details"] = bloom
         codes_info.append(course)
-        codes_info.append({"Co_Details":bloom})
+       
     return codes_info
 
 def get_course_attainment_configuration(year,dept,courseCode):
@@ -124,11 +124,12 @@ def get_course_attainment_information(year,term,courseCode,section,facultyGivenI
     bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,term,courseCode)
     for attainment in attainment_data:
         course_attainment_data.append(attainment)
-    a = course_attainment_data[0]['uniqueValues']
-    for i in a:
-        for j in bloom:
-            if(j.get('CO') == i.get('coNumber')):
-                i["Difficulty"] = j["Difficulty"]
+    if len(course_attainment_data) > 0:
+        a = course_attainment_data[0]['uniqueValues']
+        for i in a:
+            for j in bloom:
+                if(j.get('CO') == i.get('coNumber')):
+                    i["Difficulty"] = j["Difficulty"]
     return course_attainment_data
 
 def get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode):
@@ -290,5 +291,5 @@ def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
     CO4["Difficulty"] = diff4
     CO5["Difficulty"] = diff5
     CO6["Difficulty"] = diff6
-    return CO1,CO2,CO3,CO4,CO5,CO6,
+    return CO1,CO2,CO3,CO4,CO5,CO6
 
