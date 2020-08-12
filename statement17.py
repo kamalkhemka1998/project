@@ -11,28 +11,9 @@ lesson_plan = mydatabase['dhi_lesson_plan']
 term_detail = mydatabase['dhi_term_detail']
 dhi_user = mydatabase['dhi_user']
 
-def get_academicYear_principal():
-    querry = lesson_plan.aggregate([ {'$group' : { '_id': 'null',"academicYear" : {'$addToSet' : "$academicYear"} } }  ])
-    return [q for q in querry]
-    
-def get_term_principal(academicYear):
-    querry = lesson_plan.aggregate([
-            {'$match' : { "academicYear" : academicYear }},
-            {'$project' : { "departments.termNumber":1 }},
-            {'$unwind' : "$departments"},
-            {'$group' : {'_id': 'null', 
-                "terms" : {'$addToSet' : "$departments.termNumber"}
-                }},
-                {'$project':{'_id':0,'terms':1}}
-        ])
-    return [q for q in querry]
 
-def get_dept_principal(academicYear,terms):
+def get_dept_principal():
     query =lesson_plan.aggregate([
-    {'$match': {
-        "academicYear":academicYear,
-        "departments.termNumber": {'$in':terms}
-        }},
         {'$unwind': '$departments'},
         {'$group': {'_id': 'null', "dept":{"$addToSet":"$departments.deptId"}}},
         {'$project': {'_id':0, "dept":1}}
@@ -45,7 +26,7 @@ def get_dept_hod(employeeGivenId):
 
 def get_academicYear_hod(dept):
     querry = lesson_plan.aggregate([
-    { '$match' : {"faculties.facultyDeptId":'CS'}},
+    { '$match' : {"faculties.facultyDeptId":dept}},
     {'$group': { '_id' : 'null',
         "all_academic_year" : {'$addToSet': "$academicYear"}
         }},
@@ -154,7 +135,8 @@ def get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode):
             "courseCode":courseCode}},
             {"$group":{"_id":{"CO":"$execution.couseOutcomes","Module":"$execution.moduleNumber","Lesson":"$execution.lessonNumber",
             "Topics":"$execution.topicsCovered"}
-            ,"blooms":{"$addToSet":"$execution.bloomsLevel"}}}
+            ,"blooms":{"$addToSet":"$execution.bloomsLevel"}}},
+            {'$sort':{'CO':1}}
         ])
     blooms_level = []
     for bloom in blooms:
