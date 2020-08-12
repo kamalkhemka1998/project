@@ -4,7 +4,7 @@ from pymongo import MongoClient
 db = MongoClient(host='localhost',port = 27017)
 
 #mydatabase = db['nba-analytics-backend']
-mydatabase = db['nba-analytics-backend']
+mydatabase = db['dhi-mite']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
 lesson_plan = mydatabase['dhi_lesson_plan']
@@ -26,6 +26,15 @@ def get_dept_term_principal(academicYear):
                 }}
         ])
     return [q for q in querry]
+
+def get_dept_principal():
+    query =lesson_plan.aggregate([
+        {'$unwind': '$departments'},
+        {'$group': {'_id': 'null', "dept":{"$addToSet":"$departments.deptId"}}},
+        {'$project': {"dept":1,'_id':0}}
+    ])
+    return [q for q in query]
+
 
 def get_dept_hod(employeeGivenId):
     query =dhi_user.find({"employeeGivenId":employeeGivenId}, {'_id':0, 'deptId' : 1 })
