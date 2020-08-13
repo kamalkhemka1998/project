@@ -192,8 +192,8 @@ def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumb
                 sub.append({
                     "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
                     "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents'],
-                    "Attainment":method['questionLevelAttainment'],
-                    "AttainmentPercentage":method['questionLevelAttainmentPercentage']
+                    "attainment":method['questionLevelAttainment'],
+                    "attainmentPercentage":method['questionLevelAttainmentPercentage']
                 })
                 method_details = sub
 
