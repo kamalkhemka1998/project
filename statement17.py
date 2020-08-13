@@ -4,28 +4,21 @@ from pymongo import MongoClient
 db = MongoClient(host='localhost',port = 27017)
 
 #mydatabase = db['nba-analytics-backend']
-mydatabase = db['dhi-mite']
+mydatabase = db['analytics']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
 lesson_plan = mydatabase['dhi_lesson_plan']
 term_detail = mydatabase['dhi_term_detail']
 dhi_user = mydatabase['dhi_user']
 
-def get_academicYear_principal():
-    querry = lesson_plan.aggregate([ {'$group' : { '_id': 'null',"academicYear" : {'$addToSet' : "$academicYear"} } }  ])
-    return [q for q in querry]
-    
-def get_dept_term_principal(academicYear):
-    querry = lesson_plan.aggregate([
-            {'$match' : { "academicYear" : academicYear }},
-            {'$project' : { "departments.deptId" : 1, "departments.termNumber":1 }},
-            {'$unwind' : "$departments"},
-            {'$group' : {'_id': 'null', 
-                "depts" : {'$addToSet' : "$departments.deptId"},
-                "terms" : {'$addToSet' : "$departments.termNumber"}
-                }}
-        ])
-    return [q for q in querry]
+
+def get_dept_principal():
+    query =lesson_plan.aggregate([
+        {'$unwind': '$departments'},
+        {'$group': {'_id': 'null', "dept":{"$addToSet":"$departments.deptId"}}},
+        {'$project': {'_id':0, "dept":1}}
+    ])
+    return [q for q in query]
 
 def get_dept_principal():
     query =lesson_plan.aggregate([
@@ -42,7 +35,7 @@ def get_dept_hod(employeeGivenId):
 
 def get_academicYear_hod(dept):
     querry = lesson_plan.aggregate([
-    { '$match' : {"faculties.facultyDeptId":'CS'}},
+    { '$match' : {"faculties.facultyDeptId":dept}},
     {'$group': { '_id' : 'null',
         "all_academic_year" : {'$addToSet': "$academicYear"}
         }},
@@ -92,17 +85,17 @@ def  get_terms_faculty(facultyGivenId, academicYear):
     return [q for q in querry]
 
 
-def get_course_of_faculty(facultyGivenId,year,term):
+def get_course_of_faculty(facultyGivenId,year,terms):
     courses = lesson_plan.aggregate([
         {'$unwind' : "$faculties" },
-        {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :term}}},
-        {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
+            {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :terms}}},
+            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"facultyName":"$faculties.facultyName","_id":0}}
         ])
     codes_info = []
     codes = []
     for course in courses:
         code = course["courseCode"]
-        bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,term,code)
+        bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,terms,code)
         course["Co_details"] = bloom
         codes_info.append(course)
        
@@ -151,7 +144,8 @@ def get_bloomsLevel_Of_Cos(facultyGivenId, academicYear, term,courseCode):
             "courseCode":courseCode}},
             {"$group":{"_id":{"CO":"$execution.couseOutcomes","Module":"$execution.moduleNumber","Lesson":"$execution.lessonNumber",
             "Topics":"$execution.topicsCovered"}
-            ,"blooms":{"$addToSet":"$execution.bloomsLevel"}}}
+            ,"blooms":{"$addToSet":"$execution.bloomsLevel"}}},
+            {'$sort':{'CO':1}}
         ])
     blooms_level = []
     for bloom in blooms:

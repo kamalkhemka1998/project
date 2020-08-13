@@ -11,10 +11,10 @@ app = Flask(__name__)
 #app.json_encoder = MongoJSON_Encoder
 cors = CORS(app)
 
-@app.route('/principal/department')
-def get_dept_principal():
+@app.route('/principal/departments')
+def get_dept_principal( ):
     data = st_17.get_dept_principal()
-    return jsonify({"departments":data})
+    return jsonify({"departments":data[0]['dept']})
 
 @app.route('/hod/dept/<employeeGivenId>')
 def dep_hod(employeeGivenId = '583'):
@@ -31,9 +31,10 @@ def get_term_hod(academicYear,dept):
     data = st_17.get_terms_hod(academicYear,dept)
     return jsonify( { "hod_terms" : data} )
 
-@app.route('/hod/details/<academicYear>/<dept>')
+@app.route('/hod/details/<academicYear>/<dept>/<t>')
 # lists all the facultyId in hod's dept, invokes the method... works for principal too, only that we needn't find dept it'll be choosen
-def get_facultyId_dept(academicYear = '2018-19', dept='CS',terms = ['3']):
+def get_facultyId_dept(academicYear = '2018-19', dept='CS',t = '3'):
+    terms = list(t)
     list_faculty = st_17.get_facultyId(academicYear,dept,terms)
     # print(list_faculty)
     hod_data = list()
