@@ -167,6 +167,11 @@ def get_bloomsLevel_of_cos(facultyId,academicYear,deptNumber,courseCode):
     blooms = st_17.get_bloomsLevel_Of_Cos(facultyId,academicYear,deptNumber,courseCode)
     return jsonify({"res":blooms})
 
+@app.route('/getTotalLessons')
+def get_totalLessons(fid="583",year="2018-19",term=['4'],code="17CS42"):
+    totalLessons = st_17.get_totalLessons_of_course_and_Co(fid,year,term,code)
+    return jsonify({"res":totalLessons})
+
 if __name__ == "__main__":
     app.run(debug=True) 
 
