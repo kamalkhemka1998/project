@@ -11,17 +11,6 @@ lesson_plan = mydb['dhi_lesson_plan']
 generic_attainment_configuration = mydb['dhi_generic_attainment_config']
 generic_attainment_data = mydb['dhi_generic_attainment_data']
 
-class User:
-    def __init__(self,facultyId,academicYear,termNumber):
-        self.facultyId = facultyId
-        self.academicYear = academicYear
-        self.termNumber = termNumber
-
-def get_user():
-    #Faculty
-    user = User("67","2018-19","6")
-    return user
-
 def get_course_code(facultyId,academicYear,termNumber):
     courses = lesson_plan.aggregate([
         {
@@ -95,7 +84,7 @@ def get_cos_of_courses(facultyId,academicYear,termNumber):
                                                  "direct_attainment":"$courseOutcomeDetailsForAttainment.directAttainment",
                                                  "indirect_attainment":"$courseOutcomeDetailsForAttainment.indirectAttainment"},
                                              }
-                                             
+                                            
                     }
                 },
                 {
@@ -137,6 +126,11 @@ def get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coN
             "courseCode" : "$courseDetails.courseCode",
             "courseName" : "$courseDetails.courseName",
             "coNumber" : "$courseOutcomeDetailsForAttainment.coNumber",
+            "directAttainment" : "$courseOutcomeDetailsForAttainment.directAttainment",
+            "indirectAttainment" : "$courseOutcomeDetailsForAttainment.indirectAttainment",
+            "totalNumberOfStudents" : {
+                "$size" : "$studentIds"
+                },
             "directMethods" : "$courseOutcomeDetailsForAttainment.directMethods",
             "indirectMethods" : "$courseOutcomeDetailsForAttainment.indirectMethods",
             "_id" : 0
@@ -147,10 +141,10 @@ def get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coN
         }
         ] )
     
-    co_methods = []    
-
+    co_methods = []     
     for field in coDetails:
         co_methods.append(field)
+
 
     return co_methods
 
@@ -158,6 +152,7 @@ def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumb
     coMethods = get_co_methods(academicYear,facultyGivenId,termNumber,section,courseCode,coNumber)
     test_co_details = {}
     directMethods = []
+    methods = []
     if len(coMethods) > 0:
     
         directMethods = coMethods[0]['directMethods']
@@ -167,12 +162,19 @@ def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumb
         test_co_details['courseName'] = coMethods[0]['courseName']
         test_co_details['facultyId'] = coMethods[0]['facultyId']
         test_co_details['facultyName'] = coMethods[0]['facultyName']
+        test_co_details['totalNumberOfStudents'] = coMethods[0]['totalNumberOfStudents']
+        test_co_details['directAttainment'] = coMethods[0]['directAttainment']
+        test_co_details['indirectAttainment'] = coMethods[0]['indirectAttainment']
         test_co_details['direct_attainment_details'] = []
         test_co_details['indirect_attainment_details'] = []
     
         weightage = get_weightage(academicYear,deptId,courseType)
 
         firstLevel = weightage[0]['firstLevelWeightage']
+        direct_method_weightage = weightage[0]['directMethodsWeightage']
+        indirect_method_weightage = weightage[0]['indirectMethodsWeightage']
+        print(direct_method_weightage)
+
         test_co_details['directAttainmentWeightage'] = firstLevel['directMethodWeightage']
         test_co_details['indirectAttainmentWeightage'] = firstLevel['indirectMethodWeightage']
 
@@ -189,7 +191,9 @@ def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumb
                 sub = []
                 sub.append({
                     "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
-                    "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents']
+                    "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents'],
+                    "attainment":method['questionLevelAttainment'],
+                    "attainmentPercentage":method['questionLevelAttainmentPercentage']
                 })
                 method_details = sub
 
@@ -206,9 +210,25 @@ def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumb
                 "methodName" : method['methodName'],
                 "description" : method['methodDescription'],
                 "attainment" : method['attainment'],
-                "attainmentPercentage" : method['attainmentPercentage']
+                "attainmentPercentage" : method['attainmentPercentage'],
+                "noOfStudentsGivenFeedback":method['numberOfStudentsGivenFeedback'],
+                "percentageOfFeedback":method['percentageOfFeedback']
                 })
-    
+        
+        for method in direct_method_weightage:
+            methods = method['methods']
+            weightage = method['weightage']
+            for m in test_co_details['direct_attainment_details']:
+                if m['methodName'] in methods:                 
+                    m['weightage'] = weightage
+
+        for method in indirect_method_weightage:
+            methods = method['methods']
+            weightage = method['weightage']
+            for m in test_co_details['indirect_attainment_details']:
+                if m['methodName'] in methods:                 
+                    m['weightage'] = weightage
+
     return test_co_details
     
 def get_weightage(academicYear,deptId,courseType):
@@ -224,10 +244,11 @@ def get_weightage(academicYear,deptId,courseType):
         {
             "$project":{
                 "firstLevelWeightage" : "$subGenericAttainmentConfigurationList.firstLevelWeightage",
+                "directMethodsWeightage" : "$subGenericAttainmentConfigurationList.directMethodsWeightage",
+                "indirectMethodsWeightage" : "$subGenericAttainmentConfigurationList.indirectMethodsWeightage",
                 "_id" : 0
             }
-        }
-            
+        }           
     ])
     
     weightages = []
@@ -251,8 +272,12 @@ def get_rubrics_details(academicYear,deptId,courseType):
         {
             "$project":{
                 "subGenericAttainmentConfigurationList.directMethods.rubricDetail":1,
+                "subGenericAttainmentConfigurationList.directMethods.target":1,
+                "subGenericAttainmentConfigurationList.indirectMethods.target":1,
+                "subGenericAttainmentConfigurationList.directMethods.rules":1,
+                "subGenericAttainmentConfigurationList.indirectMethods.rules":1,
                 "subGenericAttainmentConfigurationList.directMethods.methodName":1,
-                "subGenericAttainmentConfigurationList.directMethods.methodName":1,
+                "subGenericAttainmentConfigurationList.indirectMethods.methodName":1,
                 "subGenericAttainmentConfigurationList.indirectMethods.rubricDetail":1,
                 "_id":0
             }

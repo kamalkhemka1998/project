@@ -23,7 +23,7 @@ def get_user():
     user = User("583","2018-19","6","CS")
     return user
 
-def get_faculty_Ids_of_a_dept():
+def get_faculty_Ids_of_a_dept(academicYear,termNumber,deptId):
     user = get_user()
     faculties = lesson_plan.aggregate([
         {
@@ -33,9 +33,9 @@ def get_faculty_Ids_of_a_dept():
             "$unwind":"$departments"
         },
         {
-            "$match":{"academicYear":user.academicYear,
-                "departments.termNumber":user.termNumber,
-                "departments.deptId":user.deptId,
+            "$match":{"academicYear":academicYear,
+                "departments.termNumber":{"$in":termNumber},
+                "departments.deptId":deptId,
             }
         },
         {
@@ -43,7 +43,8 @@ def get_faculty_Ids_of_a_dept():
                 "_id":{
                     "courseCode":"$courseCode",
                     "faculty_Id":"$faculties.facultyGivenId",
-                    "section":"$departments.section"
+                    "section":"$departments.section",
+                    "termNumber":"$departments.termNumber",
                 },
                 "count":{"$sum":1}
             }
@@ -63,9 +64,8 @@ def get_faculty_Ids_of_a_dept():
 
     return faculties_data
 
-def get_cos_of_all_courses_of_a_dept():
-    faculties = get_faculty_Ids_of_a_dept()
-    user = get_user()
+def get_cos_of_all_courses_of_a_dept(academicYear,termNumber,deptId):
+    faculties = get_faculty_Ids_of_a_dept(academicYear,termNumber,deptId)
     co_details_of_courses = []
     
     for faculty in faculties:
@@ -80,13 +80,16 @@ def get_cos_of_all_courses_of_a_dept():
                 {
                     "$match":
                     {
-                        "year":user.academicYear,
+                        "year":academicYear,
                         "faculties.facultyGivenId":course_code_info['faculty_Id'],
-                        "termNumber":user.termNumber,
+                        "termNumber":course_code_info['termNumber'],
                         "courseDetails.courseCode":course_code_info['courseCode'],
                         "section":course_code_info['section'],
-                        "deptId":user.deptId
+                        "deptId":deptId
                     }
+                },
+                {
+                    "$limit":5
                 },
                 {
                     "$group":{
@@ -97,7 +100,8 @@ def get_cos_of_all_courses_of_a_dept():
                             "courseType":"$courseDetails.courseType",
                             "deptId":"$deptId",
                             "facultyId":"$faculties.facultyGivenId",
-                            "facultyName":"$faculties.facultyName"
+                            "facultyName":"$faculties.facultyName",
+                            "termNumber":"$termNumber"
                         },
                         "average_co_attainments":{"$avg":"$courseOutcomeDetailsForAttainment.totalAttainment"},
                         
@@ -122,6 +126,7 @@ def get_cos_of_all_courses_of_a_dept():
                         "deptId":"$_id.deptId",
                         "facultyId":"$_id.facultyId",
                         "facultyName":"$_id.facultyName",
+                        "termNumber":"$_id.termNumber",
                         "co_details":1,
                         "_id":0 
                     }
