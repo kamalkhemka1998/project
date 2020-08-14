@@ -41,7 +41,7 @@ def get_facultyId_dept(academicYear = '2018-19', dept='CS',t = '3'):
     for fid in list_faculty[0]['faculty_id']:
         data = st_17.get_course_of_faculty(fid,academicYear, terms)
         for d in data:
-            section = d['departments'][0]['section']
+            section = d['departments'][0]['section']        
             d['termNumber'] = d["departments"][0]["termNumber"]
             term = list(d["departments"][0]["termNumber"])
             d.pop('departments')
@@ -100,7 +100,6 @@ def get_course_codes(fid,year,term = ['4']):
         term = list(d["departments"]["termNumber"])
         d.pop('departments')
         d['section'] = section
-        
         courseCode = d["courseCode"]
         courseO_att_info = st_17.get_course_attainment_information(year,term,courseCode,section,fid)
         if len(courseO_att_info) != 0:
@@ -169,9 +168,9 @@ def get_bloomsLevel_of_cos(facultyId,academicYear,deptNumber,courseCode):
     blooms = st_17.get_bloomsLevel_Of_Cos(facultyId,academicYear,deptNumber,courseCode)
     return jsonify({"res":blooms})
 
-@app.route('/getTotalLessons')
-def get_totalLessons(fid="583",year="2018-19",term=['4'],code="17CS42"):
-    totalLessons = st_17.get_totalLessons_of_course_and_Co(fid,year,term,code)
+@app.route('/getTotalLessons/<fid>/<year>/<code>/term')
+def get_totalLessons(fid,year,code,term=['4']):
+    totalLessons = st_17.get_totalLessons_of_course_and_Co(fid,year,code,term)
     return jsonify({"res":totalLessons})
 
 if __name__ == "__main__":
