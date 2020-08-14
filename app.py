@@ -34,20 +34,14 @@ def get_term_hod(academicYear,dept):
 @app.route('/hod/details/<academicYear>/<dept>/<t>')
 # lists all the facultyId in hod's dept, invokes the method... works for principal too, only that we needn't find dept it'll be choosen
 def get_facultyId_dept(academicYear = '2018-19', dept='CS',t = '3'):
-    terms = list(t)
+    terms = list(t.split(','))
     list_faculty = st_17.get_facultyId(academicYear,dept,terms)
     # print(list_faculty)
     hod_data = list()
     for fid in list_faculty[0]['faculty_id']:
         data = st_17.get_course_of_faculty(fid,academicYear, terms)
         for d in data:
-            section = d['departments'][0]['section']
-            d['termNumber'] = d["departments"][0]["termNumber"]
-            term = list(d["departments"][0]["termNumber"])
-            d.pop('departments')
-            d['section'] = section
-            courseCode = d["courseCode"]
-            courseO_att_info = st_17.get_course_attainment_information(academicYear,term,courseCode,section,fid)
+            courseO_att_info = st_17.get_course_attainment_information(academicYear,list(d['termNumber']),d["courseCode"],d['section'],fid)
             if len(courseO_att_info) != 0:
                 for i in range(len(courseO_att_info[0]["uniqueValues"])):
                     for j in range(len(d["Co_details"])):
@@ -90,19 +84,14 @@ def get_terms_faculty(facultyGivenId,academicYear):
     faculty_terms_data = st_17.get_terms_faculty(facultyGivenId,academicYear)
     return jsonify({"faculty_terms":faculty_terms_data})
 
-@app.route("/courseCodes/<fid>/<year>")
+@app.route("/courseCodes/<fid>/<year>/<term>")
 def get_course_codes(fid,year,term = ['4']):
+    term = list(term.split(','))
     data = st_17.get_course_of_faculty(fid,year,term)
     faculty_data = list()
     for d in data:
-        section = d['departments']['section']
-        d['termNumber'] = d["departments"]["termNumber"]
-        term = list(d["departments"]["termNumber"])
-        d.pop('departments')
-        d['section'] = section
-        
         courseCode = d["courseCode"]
-        courseO_att_info = st_17.get_course_attainment_information(year,term,courseCode,section,fid)
+        courseO_att_info = st_17.get_course_attainment_information(year,list(d['termNumber']),d["courseCode"],d['section'],fid)
         if len(courseO_att_info) != 0:
             for i in range(len(courseO_att_info[0]["uniqueValues"])):
                 for j in range(len(d["Co_details"])):

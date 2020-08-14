@@ -88,18 +88,27 @@ def  get_terms_faculty(facultyGivenId, academicYear):
 
 def get_course_of_faculty(facultyGivenId,year,terms):
     courses = lesson_plan.aggregate([
-            {"$unwind":"$faculties"},
-            {"$unwind":"$departments"},
-            {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :term}}},
-            {"$project":{"courseCode":1,"courseName":1,"departments.section":1,"departments.termNumber":1,"faculties.facultyName":1,"_id":0}}
-        ])
+        {"$match":{"academicYear":year,"faculties.facultyGivenId":facultyGivenId,"departments.termNumber":{'$in' :terms}}},
+        {'$unwind' : "$faculties" },
+        {'$unwind': "$departments"},
+        {'$group': {
+            '_id':{"courseCode":'$courseCode','coursename':'$courseName','facultyGivenId':'$faculties.facultyGivenId',
+            'termNumber':'$departments.termNumber','section':'$departments.section', "facultyName":'$faculties.facultyName',
+            'facultyGivenId':'$faculties.facultyGivenId'}
+        }},
+        {"$project":{
+            "courseCode":'$_id.courseCode',"courseName":"$_id.coursename","section":"$_id.section","termNumber":"$_id.termNumber",
+         "facultyName":"$_id.facultyName", 'facultyGivenId':'$_id.facultyGivenId' , '_id':0 
+         }}
+    ])
     codes_info = []
     codes = []
     for course in courses:
         code = course["courseCode"]
         bloom = get_bloomsLevel_Of_Cos(facultyGivenId,year,terms,code)
-        course["Co_details"] = bloom
-        codes_info.append(course)
+        if len(bloom) != 0:
+            course["Co_details"] = bloom
+            codes_info.append(course)
     return codes_info
 
 def get_course_attainment_configuration(year,dept,courseCode):
