@@ -26,9 +26,18 @@ def get_course_code(facultyId,academicYear,termNumber):
             }
         },
         {
-            "$project":{"courseCode":1,
-                "section":"$departments.section",
-                "termNumber":"$departments.termNumber",
+            "$group":{
+                "_id":{
+                        "courseCode":"$courseCode",
+                        "section":"$departments.section",
+                        "termNumber":"$departments.termNumber"
+                }
+            }
+        },
+        {
+            "$project":{"courseCode":"$_id.courseCode",
+                "section":"$_id.section",
+                "termNumber":"$_id.termNumber",
                 "_id":0
             }
         }
@@ -86,7 +95,9 @@ def get_cos_of_courses(facultyId,academicYear,termNumber):
                                              }
                                             
                     }
+                    
                 },
+                
                 {
                     "$project":
                     {
