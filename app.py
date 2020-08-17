@@ -85,7 +85,7 @@ def get_terms_faculty(facultyGivenId,academicYear):
     return jsonify({"faculty_terms":faculty_terms_data})
 
 @app.route("/courseCodes/<fid>/<year>/<term>")
-def get_course_codes(fid,year,term = ['4']):
+def get_course_codes(fid,year,term):
     term = list(term.split(','))
     data = st_17.get_course_of_faculty(fid,year,term)
     faculty_data = list()
@@ -160,7 +160,7 @@ def get_bloomsLevel_of_cos(facultyId,academicYear,deptNumber,courseCode):
     return jsonify({"res":blooms})
 
 @app.route('/getTotalLessons/<fid>/<year>/<code>/term')
-def get_totalLessons(fid,year,code,term=['4']):
+def get_totalLessons(fid,year,code,term=['3','4','5']):
     totalLessons = st_17.get_totalLessons_of_course_and_Co(fid,year,code,term)
     return jsonify({"res":totalLessons})
 
