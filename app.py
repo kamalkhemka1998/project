@@ -68,7 +68,7 @@ def get_facultyId_dept(academicYear = '2018-19', dept='CS',t = '3'):
                 sum_diff += d["Co_details"][j]["Difficulty"]
             crs_diff_levl = sum_diff/num_cos 
             d["course_difficultyLevel_per"] = crs_diff_levl
-            hod_data.append( d)
+            hod_data.append(d)
     return jsonify({"hod_data": hod_data})
 
 @app.route('/faculty/academicyear/<facultyGivenId>')
@@ -85,7 +85,7 @@ def get_terms_faculty(facultyGivenId,academicYear):
     return jsonify({"faculty_terms":faculty_terms_data})
 
 @app.route("/courseCodes/<fid>/<year>/<term>")
-def get_course_codes(fid,year,term = ['4']):
+def get_course_codes(fid,year,term):
     term = list(term.split(','))
     data = st_17.get_course_of_faculty(fid,year,term)
     faculty_data = list()
@@ -117,12 +117,13 @@ def get_course_codes(fid,year,term = ['4']):
         for j in range( num_cos ):
             sum_diff += d["Co_details"][j]["Difficulty"]
         crs_diff_levl = sum_diff/num_cos 
-        d["course_difficultyLevel_per"] = crs_diff_levl
+        a = round(crs_diff_levl,2)
+        d["course_difficultyLevel_per"] = a
         faculty_data.append(d)
     return jsonify({"faculty": faculty_data})
 
 @app.route("/courseAttainmentData")
-def get_course_attainment_information(year = '2018-19',term = ['4'],courseCode = '17CS42',section='A',facultyGivenId = '583'):
+def get_course_attainment_information(year,term,courseCode,section,facultyGivenId):
     course_attainment_data = st_17.get_course_attainment_information(year,term,courseCode,section,facultyGivenId)
     return jsonify({"res":course_attainment_data})
 
@@ -158,9 +159,9 @@ def get_bloomsLevel_of_cos(facultyId,academicYear,deptNumber,courseCode):
     blooms = st_17.get_bloomsLevel_Of_Cos(facultyId,academicYear,deptNumber,courseCode)
     return jsonify({"res":blooms})
 
-@app.route('/getTotalLessons')
-def get_totalLessons(fid="583",year="2018-19",term=['4'],code="17CS42"):
-    totalLessons = st_17.get_totalLessons_of_course_and_Co(fid,year,term,code)
+@app.route('/getTotalLessons/<fid>/<year>/<code>/term')
+def get_totalLessons(fid,year,code,term=['3','4','5']):
+    totalLessons = st_17.get_totalLessons_of_course_and_Co(fid,year,code,term)
     return jsonify({"res":totalLessons})
 
 if __name__ == "__main__":

@@ -3,9 +3,9 @@ from pymongo import MongoClient
 
 db = MongoClient(host='localhost',port = 27017)
 
-#mydatabase = db['nba-analytics-backend']
+mydatabase = db['nba-analytics-backend']
 # mydatabase = db['analytics']
-mydatabase = db['dhi-mite']
+# mydatabase = db['dhi-mite']
 generic_attainment_configuration = mydatabase['dhi_generic_attainment_configuration']
 generic_attainment_data = mydatabase['dhi_generic_attainment_data']
 lesson_plan = mydatabase['dhi_lesson_plan']
@@ -306,7 +306,7 @@ def difficulty_Of_CO_and_Couse(CO1,CO2,CO3,CO4,CO5,CO6):
     CO6["Difficulty"] = diff6
     return CO1,CO2,CO3,CO4,CO5,CO6
 
-def get_totalLessons_of_course_and_Co(facultyGivenId, academicYear, term,courseCode):
+def get_totalLessons_of_course_and_Co(facultyGivenId, academicYear, courseCode,term):
     total = lesson_plan.aggregate([
             {"$unwind":"$faculties"},
             {"$unwind":"$departments"},
