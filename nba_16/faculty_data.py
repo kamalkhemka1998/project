@@ -199,12 +199,18 @@ def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumb
                 method_details = sub[0]['nextLevelAttainments']
         
             else:
+                if 'questionLevelAttainment' in method or 'questionLevelAttainmentPercentage'in method:
+                    attainment = method['questionLevelAttainment']
+                    attainmentPercentage = method['questionLevelAttainmentPercentage']
+                else:
+                    attainment = 0.0
+                    attainmentPercentage = 0.0
                 sub = []
                 sub.append({
                     "numberOfStudentsParticipated" : method['numberOfStudentsParticipated'],
                     "numberOfTargetAttainedStudents" : method['numberOfTargetAttainedStudents'],
-                    "attainment":method['questionLevelAttainment'],
-                    "attainmentPercentage":method['questionLevelAttainmentPercentage']
+                    "attainment":attainment,
+                    "attainmentPercentage": attainmentPercentage
                 })
                 method_details = sub
 
@@ -217,13 +223,20 @@ def get_co_data(academicYear,facultyGivenId,termNumber,section,courseCode,coNumb
                 })
 
         for method in indirectMethods:
+            if 'numberOfStudentsGivenFeedback' in method or 'percentageOfFeedback' in method:
+                feedback = method['numberOfStudentsGivenFeedback']
+                feedbackPercentage = method['percentageOfFeedback']
+            else:
+                feedback = 0
+                feedbackPercentage = 0.0
+
             test_co_details['indirect_attainment_details'].append({
                 "methodName" : method['methodName'],
                 "description" : method['methodDescription'],
                 "attainment" : method['attainment'],
                 "attainmentPercentage" : method['attainmentPercentage'],
-                "noOfStudentsGivenFeedback":method['numberOfStudentsGivenFeedback'],
-                "percentageOfFeedback":method['percentageOfFeedback']
+                "noOfStudentsGivenFeedback":feedback,
+                "percentageOfFeedback":feedbackPercentage
                 })
         
         for method in direct_method_weightage:
