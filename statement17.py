@@ -21,13 +21,13 @@ def get_dept_principal():
     ])
     return [q for q in query]
 
-def get_dept_principal():
-    query =lesson_plan.aggregate([
-        {'$unwind': '$departments'},
-        {'$group': {'_id': 'null', "dept":{"$addToSet":"$departments.deptId"}}},
-        {'$project': {"dept":1,'_id':0}}
-    ])
-    return [q for q in query]
+# def get_dept_principal():
+#     query =lesson_plan.aggregate([
+#         {'$unwind': '$departments'},
+#         {'$group': {'_id': 'null', "dept":{"$addToSet":"$departments.deptId"}}},
+#         {'$project': {"dept":1,'_id':0}}
+#     ])
+#     return [q for q in query]
 
 
 def get_dept_hod(employeeGivenId):
