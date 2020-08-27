@@ -66,7 +66,7 @@ def login():
     user = UserObject(username=user["email"], roles=roles)
     # Identity can be any data that is json serializable
     access_token = create_access_token(identity=user,expires_delta=False)
-    return jsonify(access_token=access_token), 200
+    return jsonify(dhi_analytics_token=access_token), 200
 
 @app.route('/message')
 def message():
