@@ -103,7 +103,7 @@ def termnumber(fid,year):
 def getTermType(degreeId):
      return jsonify({"termType":term.termType(degreeId)})
 
-@app.route("/facultydetails/<string:email>/")
+@app.route("/facultydetails/<string:email>")
 def faculty_details(email):
     return jsonify({"facultydetails": facultydetails.faculty(email)})
 
