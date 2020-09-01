@@ -111,6 +111,7 @@ def get_overall_attainment_data(facultyId,termList,year):
             'faculties.facultyId':facultyId,
             'academicYear':year,
             'departments.termNumber':{'$in':termList}
+        
             }
         },
         {
@@ -125,17 +126,20 @@ def get_overall_attainment_data(facultyId,termList,year):
                 'year':'$academicYear',
             } 
         }
-        ])
+        ]
+    
+       )
+    
     df = pd.DataFrame(courses)
     attainmnet_data = []
     df1 = df.copy()
-
     attainment_data = [get_attainment_details(df1.loc[i]) for i in range(len(df1))]
     attainment = list(itertools.chain.from_iterable(attainment_data))
     df2 = pd.DataFrame(data=attainment, columns=['coNumber','coTitle','termNumber','section','courseCode',
                                            'year','facultyId','dir_methodName','dir_methodDescription','dir_attainment',
                                             'dir_attainmentPercentage','indir_attainment','indir_attainmentPercentage',
                                            'indir_methodName','indir_methodDescription','totalAttainment','directAttainment','indirectAttainment'])
+    
     if df2.empty:
         return  attainmnet_data
     df2['dir_attainment'] = df2['dir_attainment'].apply(convert_)

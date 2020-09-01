@@ -10,7 +10,7 @@ import multitenantconfig
 import academicyear, facultydetails, principal, term
 from NBA21 import faculty_attainment_data,hod_attainment_data_
 import DbAccess
-
+from NBA22 import faculty_attainment_data22
 
 app = Flask(__name__)
 CORS(app)
@@ -132,6 +132,7 @@ def nba3termnumber(fid, year, role):
 def nba21_faculty_data(year,termNumbers,facultyId):
     termNumbers = list(termNumbers.split(','))
     faculty_data =  faculty_attainment_data.get_overall_attainment_data(facultyId,termNumbers,year)
+    print(faculty_data);
     return jsonify({"faculty_data":faculty_data})
 
 
@@ -147,6 +148,22 @@ def nba21_principal_details(academicYear, termNumber, department):
     principaldetails = hod_attainment_data_.hodSubject(
         academicYear, termNumber, department)
     return jsonify({"principaldetails": principaldetails})
+
+# 15BT744/2018-19/408/7
+# @app.route("/nba22facultyDetail/<string:courseCode>/<string:acadYear>/<string:facultyId>/<string:termNumber>")
+# def nba22_faculty_details(courseCode,acadYear,facultyId,termNumber):
+#     faculty_attainment_data22.get_bloomslevel_with_co()
+#     return {"Mes":"Rec"};
+@app.route("/nba22facultyDetail/bloommapping/<string:facultyId>/<string:year>/<termNumbers>") 
+def nba22_faculty_data(year,termNumbers,facultyId):
+    termList=list(termNumbers.split(','))
+    return jsonify(faculty_attainment_data22.get_map_blooms_to_co(facultyId,termList,year))
+    
+@app.route("/nba22facultyDetail/<string:facultyId>/<string:year>/<termNumbers>")
+def nba22_faculty_attainment_data(year,termNumbers,facultyId):
+    termList=list(termNumbers.split(','))
+    faculty_attainment_data22.get_overall_attainment_data(facultyId,termList,year)
+    return jsonify({"message":"success"})
 
 if __name__ == "__main__":
     app.run(port=8088,debug=True)
