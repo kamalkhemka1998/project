@@ -34,7 +34,7 @@ def get_hod_dept(year,facultyId):
     mapping=db.dhi_lesson_plan.aggregate(pipeline)
     docs=[doc for doc in mapping]
     #details=json.dumps(docs,default=json_util.default)
-    print(docs)
+    return(docs)
 
 def get_term_hod_dept(deptId,year):
     pipeline=[
@@ -64,5 +64,5 @@ def get_term_hod_dept(deptId,year):
     mapping=db.dhi_lesson_plan.aggregate(pipeline)
     docs=[doc for doc in mapping]
     #details=json.dumps(docs,default=json_util.default)
-    print(docs)
+    return(docs)
     

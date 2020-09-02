@@ -177,13 +177,11 @@ def nba22_faculty_average_co(year,termNumbers,facultyId):
 
 @app.route("/nba22hodDetail/<string:facultyId>/<string:year>")
 def nba22_hod_dept(year,facultyId):
-    hod_attainment_data22.get_hod_dept(year,facultyId)
-    return jsonify({"message":"success"})
+    return jsonify(hod_attainment_data22.get_hod_dept(year,facultyId))
 
 @app.route("/nba22hodDetail/term/<string:deptId>/<string:year>")
 def nba22_hod_dept_term(deptId,year):
-    hod_attainment_data22.get_term_hod_dept(deptId,year)
-    return jsonify({"message":"success"})
+    return jsonify(hod_attainment_data22.get_term_hod_dept(deptId,year))
 
 
 
