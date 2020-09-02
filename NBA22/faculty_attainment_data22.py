@@ -61,10 +61,10 @@ def get_bloomslevel_with_co(x):
     details=json.dumps(docs,default=json_util.default)
 
     df=pd.DataFrame(docs)
-    df["bloomsLevel"]=df["bloomsLevel"].fillna("EMPTY")
     if df.empty:
         print("No data")
         return []
+    df["bloomsLevel"]=df["bloomsLevel"].fillna("EMPTY")
     bloomap={"EMPTY":0,"UNDERSTAND":2,"REMEMBER":1,"APPLY":3,"ANALYZE":4,"EVALUATE":5,"CREATE":6}
     bloominverse={1:"REMEMBER",2:"UNDERSTAND",3:"APPLY",4:"ANALYZE",5:"EVALUATE",6:"CREATE","EMPTY":0}
     res_table={}

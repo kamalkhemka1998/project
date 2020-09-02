@@ -19,12 +19,14 @@ db.authenticate('analytics','pPM8FUJflenw')
 
 db.authenticate('analytics','pPM8FUJflenw')
 
-def hodDetails(facultyId, academicYear, termNumber, degreeId):
+def hodDetails(facultyId, academicYear, termNumber):
     hodDepartment = [x for x in db.dhi_user.aggregate([
         {"$match": {
             "employeeGivenId": facultyId,
             # "academicYear": academicYear, 
-            "degreeId": degreeId}},
+            #"degreeId": degreeId
+            }
+            },
         {"$unwind": "$handlingDegreeAndDepartments"},
         {"$unwind": "$handlingDegreeAndDepartments.handlingDepartments"},
 
@@ -94,11 +96,12 @@ def get_overall_attainment_data(facultyIdList,termList,year):
         '$group': 
             {
                 '_id': {
-                # 'courseCode':1,
-                # 'courseName':1,
+                'courseCode':"$courseCode",
+                'courseName':"$courseName",
                 'termNumber':'$departments.termNumber',
-                # 'section':'$departments.section',
+                'section':'$departments.section',
                 'facultyId':'$faculties.facultyId',
+                'facultyGivenId':'$faculties.facultyGivenId',
                 'facultyName':'$faculties.facultyName',
                 'year':'$academicYear',
                 # 'deptId':'$departments.deptId',
@@ -112,4 +115,3 @@ def get_overall_attainment_data(facultyIdList,termList,year):
     return data_
 
 
-hodDetails('368', '2018-19', ['4'], 'BE')

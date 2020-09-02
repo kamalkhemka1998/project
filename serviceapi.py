@@ -10,7 +10,7 @@ import multitenantconfig
 import academicyear, facultydetails, principal, term
 from NBA21 import faculty_attainment_data,hod_attainment_data_
 import DbAccess
-from NBA22 import faculty_attainment_data22
+from NBA22 import faculty_attainment_data22,hod_attainment_data22
 
 app = Flask(__name__)
 CORS(app)
@@ -136,17 +136,18 @@ def nba21_faculty_data(year,termNumbers,facultyId):
     return jsonify({"faculty_data":faculty_data})
 
 
-@app.route("/nba21hodDetail/<string:facultyId>/<string:year>/<termNumbers>/<string:degreeId>")
-def nba21_hod_data(year,termNumbers,facultyId,degreeId):
+@app.route("/nba21hodDetail/<string:facultyId>/<string:year>/<termNumbers>")
+def nba21_hod_data(year,termNumbers,facultyId):
     termNumbers = list(termNumbers.split(','))
-    faculty_data =  hod_attainment_data_.hodDetails(facultyId,year,termNumbers,degreeId)
+    faculty_data =  hod_attainment_data_.hodDetails(facultyId,year,termNumbers)
     return jsonify({"faculty_data":faculty_data})
 
 
 @app.route("/nba21principalDetail/<string:academicYear>/<termNumber>/<string:department>")
 def nba21_principal_details(academicYear, termNumber, department):
+    termList=list(termNumber.split(','))
     principaldetails = hod_attainment_data_.hodSubject(
-        academicYear, termNumber, department)
+        academicYear, termList, department)
     return jsonify({"principaldetails": principaldetails})
 
 # 15BT744/2018-19/408/7
@@ -173,6 +174,18 @@ def nba22_faculty_co_description(year,termNumbers,facultyId):
 def nba22_faculty_average_co(year,termNumbers,facultyId):
     termList=list(termNumbers.split(','))
     return jsonify({"averages":faculty_attainment_data22.get_average_co_attainment(facultyId,termList,year)})
+
+@app.route("/nba22hodDetail/<string:facultyId>/<string:year>")
+def nba22_hod_dept(year,facultyId):
+    hod_attainment_data22.get_hod_dept(year,facultyId)
+    return jsonify({"message":"success"})
+
+@app.route("/nba22hodDetail/term/<string:deptId>/<string:year>")
+def nba22_hod_dept_term(deptId,year):
+    hod_attainment_data22.get_term_hod_dept(deptId,year)
+    return jsonify({"message":"success"})
+
+
 
 if __name__ == "__main__":
     app.run(port=8088,debug=True)
