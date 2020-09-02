@@ -5,6 +5,7 @@ import numpy as np
 import itertools
 import json
 import DbAccess
+import itertools
 from flask import jsonify
 from bson import json_util
 from NBA21 import  faculty_attainment_data
@@ -13,6 +14,8 @@ myclient = MongoClient(dbdetails["host"],dbdetails["port"])
 db = myclient[dbdetails["dbName"]]
 db.authenticate(dbdetails["user"], dbdetails["password"])
 
+
+#maps the blooms level to all the CO's in the received coursecode. This is a helper function
 def get_bloomslevel_with_co(x):
     pipeline=    [
     {
@@ -76,12 +79,10 @@ def get_bloomslevel_with_co(x):
     resd= pd.DataFrame(list(res_table.items()),columns = ['coNumber','BloomsLevel'])
     resd["courseCode"]=df["courseCode"][0]
     res_j=json.loads(resd.reset_index().to_json(orient="records"))
-    # print(res_j)
-    # res_j=[]
     return res_j
 
     
-
+#sends back the CO's bloomsLevel mapped for the facultyId,year and term list
 def get_map_blooms_to_co(facultyId,termList,year):
     pipeline=[
         {'$unwind':'$faculties'},
@@ -118,7 +119,51 @@ def get_map_blooms_to_co(facultyId,termList,year):
     blooms_level_mapping=[get_bloomslevel_with_co(df.loc[i]) for i in range(len(df))]
     return blooms_level_mapping
 
-def get_overall_attainment_data(facultyId,termList,year):
+#sends back the indivudual CO's indirect attainment,direct attainment and tota attainment for the center graph
+# uses the get_required_attainment_detail helper function from NBA21.faculty_attaimnet_data.py
+def get_individual_attainment_data(facultyId,termList,year):
+    pipeline=[
+        {'$unwind':'$faculties'},
+        {'$unwind':'$departments'},
+        {'$match':
+            {
+            'faculties.facultyId':facultyId,
+            'academicYear':year,
+            'departments.termNumber':{'$in':termList}
+        
+            }
+        },
+        {
+        '$project':
+            {
+                '_id':0,
+                'courseCode':1,
+                'courseName':1,
+                'termNumber':'$departments.termNumber',
+                'section':'$departments.section',
+                'facultyId':'$faculties.facultyId',
+                'year':'$academicYear',
+            } 
+        }
+        ]
+
+    mapping=db.dhi_lesson_plan.aggregate(pipeline)
+    docs=[doc for doc in mapping]
+    details=json.dumps(docs,default=json_util.default)
+    df=pd.DataFrame(docs)
+    attainment_data = [faculty_attainment_data.get_required_attainment_detail(df.loc[i]) for i in range(len(df))]
+    attainment = list(itertools.chain.from_iterable(attainment_data))
+    df2 = pd.DataFrame(data=attainment, columns=['coNumber','coTitle','termNumber','section','courseCode',
+                                           'year','facultyId','totalAttainment','directAttainment','indirectAttainment'])
+    if df2.empty:
+        return attainment_data
+    df2['totalAttainment'] = df2['totalAttainment'].round(decimals=2)
+    df2['directAttainment'] = df2['directAttainment'].round(decimals=2)
+    df2['indirectAttainment'] = df2['indirectAttainment'].round(decimals=2)
+    attainment_details = json.loads(df2.to_json(orient='records'))
+    return attainment_details
+
+def get_co_description(facultyId,termList,year):
     pipeline=[
         {'$unwind':'$faculties'},
         {'$unwind':'$departments'},
@@ -149,4 +194,73 @@ def get_overall_attainment_data(facultyId,termList,year):
     details=json.dumps(docs,default=json_util.default)
     df=pd.DataFrame(docs)
     attainment_data = [faculty_attainment_data.get_attainment_details(df.loc[i]) for i in range(len(df))]
-    print(attainment_data)
+    attainment = list(itertools.chain.from_iterable(attainment_data))
+    df2 = pd.DataFrame(data=attainment, columns=['coNumber','coTitle','termNumber','section','courseCode',
+                                           'year','facultyId','dir_methodName','dir_methodDescription','dir_attainment',
+                                            'dir_attainmentPercentage','indir_attainment','indir_attainmentPercentage',
+                                           'indir_methodName','indir_methodDescription','totalAttainment','directAttainment','indirectAttainment'])
+    df2['totalAttainment'] = df2['totalAttainment'].round(decimals=2)
+    df2['directAttainment'] = df2['directAttainment'].round(decimals=2)
+    df2['indirectAttainment'] = df2['indirectAttainment'].round(decimals=2)
+    attainment_details = json.loads(df2.to_json(orient='records'))
+    return attainment_details
+#page 1 graph data. Sends back the average co attainment values of the particular terms,year and FID
+def get_average_co_attainment(facultyId,termList,year):
+    pipeline=pipeline=[
+    {
+        '$unwind': {
+            'path': '$faculties'
+        }
+    }, {
+        '$unwind': {
+            'path': '$courseDetails'
+        }
+    }, {
+        '$match': {
+            'termNumber': {'$in':termList}, 
+            'faculties.facultyId': facultyId, 
+            'academicYear': year
+        }
+    }, {
+        '$unwind': {
+            'path': '$courseOutcomeDetailsForAttainment'
+        }
+    }, {
+        '$project': {
+            '_id': 0, 
+            'coNumber': '$courseOutcomeDetailsForAttainment.coNumber', 
+            'coTitle': '$courseOutcomeDetailsForAttainment.coTitle', 
+            'termNumber': '$termNumber', 
+            'section': '$section', 
+            'courseCode': '$courseDetails.courseCode',
+            'courseName':'$courseDetails.courseName',
+            'deptId':'$deptId', 
+            'year': '$academicYear', 
+            'facultyId': '$faculties.facultyId', 
+            'totalAttainment': '$courseOutcomeDetailsForAttainment.totalAttainment'
+        }
+    }
+    ]
+
+    mapping=db.dhi_generic_attainment_data.aggregate(pipeline)
+    docs=[doc for doc in mapping]
+    details=json.dumps(docs,default=json_util.default)
+    df=pd.DataFrame(docs)
+    df2=df.groupby(["termNumber","section","courseCode","year","courseName","deptId"])
+    average_attainment_data = list(df2['totalAttainment'].mean())
+    total_average_attainment = []
+
+    for k, v in df2:
+        data_ = {}
+        data_['termNumber'] = k[0]
+        data_['courseCode'] = k[2]
+        data_['section'] = k[1]
+        data_['facultyId'] = k[3]
+        data_['courseName'] = k[4]
+        data_['deptId'] = k[5]
+        data_['average_attainment'] = round(v['totalAttainment'].mean(),2)
+        total_average_attainment.append(data_)
+
+    docs=[doc for doc in total_average_attainment]
+    # details=json.dumps(docs,default=json_util.default)
+    return (docs)

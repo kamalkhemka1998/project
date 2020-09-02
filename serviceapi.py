@@ -132,7 +132,7 @@ def nba3termnumber(fid, year, role):
 def nba21_faculty_data(year,termNumbers,facultyId):
     termNumbers = list(termNumbers.split(','))
     faculty_data =  faculty_attainment_data.get_overall_attainment_data(facultyId,termNumbers,year)
-    print(faculty_data);
+    print(faculty_data)
     return jsonify({"faculty_data":faculty_data})
 
 
@@ -162,8 +162,17 @@ def nba22_faculty_data(year,termNumbers,facultyId):
 @app.route("/nba22facultyDetail/<string:facultyId>/<string:year>/<termNumbers>")
 def nba22_faculty_attainment_data(year,termNumbers,facultyId):
     termList=list(termNumbers.split(','))
-    faculty_attainment_data22.get_overall_attainment_data(facultyId,termList,year)
-    return jsonify({"message":"success"})
+    return jsonify(faculty_attainment_data22.get_individual_attainment_data(facultyId,termList,year))
+
+@app.route("/nba22facultyDetail/codescription/<string:facultyId>/<string:year>/<termNumbers>")
+def nba22_faculty_co_description(year,termNumbers,facultyId):
+    termList=list(termNumbers.split(','))
+    return jsonify(faculty_attainment_data22.get_co_description(facultyId,termList,year))
+
+@app.route("/nba22facultyDetail/average_co/<string:facultyId>/<string:year>/<termNumbers>")  
+def nba22_faculty_average_co(year,termNumbers,facultyId):
+    termList=list(termNumbers.split(','))
+    return jsonify({"averages":faculty_attainment_data22.get_average_co_attainment(facultyId,termList,year)})
 
 if __name__ == "__main__":
     app.run(port=8088,debug=True)
